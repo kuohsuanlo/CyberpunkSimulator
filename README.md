@@ -15,7 +15,7 @@
 目前用09年的Macbook AIR 跑1000個NPCs，FPS還算順，
 希望之後加入K-greedy A-star path finding(碩一修AI課的期末報告，特別為了都市遊戲場景優化的A-star，在都市型態充滿馬路跟大樓的地圖中，效能可以增加最多K倍)，希望可以看到更多市民NPCs在一個擁擠的Cyberpunk世界裡面生活。
 
-[1]用directed acyclic graph 和 topological ordering來實作 procedurally generation on contextual story line. 讓每日任務或environmental quests (地圖上的驚嘆號那種任務) 可以跟main story line產生因果關係，讓人覺得解主線的時候，那些不重要的支線也會產生變化，藉由任務之間的連動，加深開放世界的immersion。
+[1] 用directed acyclic graph 和 topological ordering來實作 procedurally generation on contextual story line. 讓每日任務或environmental quests (地圖上的驚嘆號那種任務) 可以跟main story line產生因果關係，讓人覺得解主線的時候，那些不重要的支線也會產生變化，藉由任務之間的連動，加深開放世界的immersion。
 https://www.facebook.com/photo.php?fbid=10154374953497951&set=a.445408877950.238072.557702950&type=3&theater&viewas=100000686899395
 
 [2] Cyberpunk Generator - https://github.com/kuohsuanlo/cyberworld
