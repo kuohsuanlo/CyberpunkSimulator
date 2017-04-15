@@ -7,6 +7,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.utils.Queue;
+import com.mygdx.item.ItemAbstract;
 
 
 
@@ -19,7 +21,7 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 1000;
+	public static final int npc_number = 100;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
@@ -31,12 +33,14 @@ public class MyGdxGame extends ApplicationAdapter {
 	private int map_render_size_y ;
 	private int[] map_buffer;
 	private ObjectNPC[] npc_list;
+	private Queue<ItemAbstract> item_queue;
 	
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
 		this.initMap();
 		this.initNpc();
+		this.initItem();
 	}
 	
 
@@ -47,7 +51,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		//this.drawTerrain();
-		this.callNpcAI();
+		
+		this.callItem();
+		this.drawItem();
+		
+		this.callNpc();
 		this.drawNpc();
 		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_number+" / FPS : "+Gdx.graphics.getFramesPerSecond());
 		
@@ -63,7 +71,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	
 	private void initMap(){
-		map = new ObjectMap();
+		item_queue = new Queue<ItemAbstract>();
+		map = new ObjectMap(this.item_queue);
 
 		this.map_render_size_x = this.map.x_MAX;
 		this.map_render_size_y = this.map.y_MAX;
@@ -72,25 +81,43 @@ public class MyGdxGame extends ApplicationAdapter {
 	private void initNpc(){
 		npc_list = new ObjectNPC[npc_number];
 		for(int id=0;id<npc_number;id++){
-			npc_list[id] = new ObjectNPC(id,id%npc_resource_nubmer,map);
+			npc_list[id] = new ObjectNPC(id,id%npc_resource_nubmer,ObjectNPC.HUMAN,map);
 		}
 	}	
+	private void initItem(){
+		
+	}
+	
 	private void disposeNpc(){
 		for(int i=0;i<npc_number;i++){
 			npc_list[i].texture.dispose();
 		}
 	}
-	private void callNpcAI(){
+	private void callNpc(){
 		for(int i=0;i<npc_number;i++){
 			npc_list[i].doAI();
 		}
 		
+	}
+	private void callItem(){
+		for(int i=0;i<item_queue.size;i++){
+			item_queue.get(i).itemTimePass();
+			if(item_queue.get(i).itemDestroy()){
+				item_queue.removeIndex(i);
+			}
+		}
 	}
 	
 	private void drawNpc(){
 		for(int i=0;i<npc_number;i++){
 			npc_list[i].render(batch);
 		}	
+	}
+	
+	private void drawItem(){
+		for(int i=0;i<item_queue.size;i++){
+			item_queue.get(i).render(batch);
+		}
 	}
 	
 	private void drawTerrain(){

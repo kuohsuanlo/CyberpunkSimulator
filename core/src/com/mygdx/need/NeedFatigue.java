@@ -5,10 +5,18 @@ import com.mygdx.job.JobAbstract;
 
 public class NeedFatigue extends NeedAbstract {
 
-	public NeedFatigue( String displayName, float thresholdPerAccumulation, float currentAccumulation,
-			float searchRadius, float totalLevel, ItemAbstract neededItem, JobAbstract neededJob) {
-		super( displayName, thresholdPerAccumulation, currentAccumulation, searchRadius, totalLevel, neededItem, neededJob);
-		id = 0;
+
+	public static int id =0;
+	
+	public NeedFatigue(String displayName, float currentLevel, float maxLevel, ItemAbstract neededItem,
+			JobAbstract neededJob) {
+		super(displayName, currentLevel, maxLevel, neededItem, neededJob);
 	}
+	public NeedFatigue(String displayName, float currentLevel, ItemAbstract neededItem, JobAbstract neededJob) {
+		super(displayName, currentLevel, neededItem, neededJob);
+	}
+
+
+
 
 }

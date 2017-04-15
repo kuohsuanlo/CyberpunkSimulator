@@ -2,15 +2,16 @@ package com.mygdx.job;
 
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.need.NeedAbstract;
+import com.mygdx.need.NeedFatigue;
 
-public class JobMove extends JobAbstract{
+public class JobRest extends JobAbstract{
 
-	public JobMove(Vector2 position, float maxProgress, float currentProgress, int decreasedNeed_id,
+	
+	public JobRest(Vector2 position, float maxProgress, float currentProgress, int decreasedNeed_id,
 			int increasedNeed_id, float decreaseNeed_amount, float increaseNeed_amount) {
 		super(position, maxProgress, currentProgress, decreasedNeed_id, increasedNeed_id, decreaseNeed_amount,
 				increaseNeed_amount);
 	}
-
 
 
 }

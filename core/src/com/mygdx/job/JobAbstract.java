@@ -4,34 +4,27 @@ import com.badlogic.gdx.math.Vector2;
 import com.mygdx.need.NeedAbstract;
 
 public abstract class JobAbstract {
-
-
+	
 	public Vector2 position;
-	public int maxProgress;
-	public int currentProgress;
-	NeedAbstract decreasedNeed;
-	NeedAbstract increasedNeed;
+	public float maxProgress;
+	public float currentProgress;
+	public int decreasedNeed_id;
+	public int increasedNeed_id;
+	public float decreaseNeed_amount;
+	public float increaseNeed_amount;
+	
 
-	public JobAbstract(float x,float y){
+
+	public JobAbstract(Vector2 position, float maxProgress, float currentProgress, int decreasedNeed_id,
+			int increasedNeed_id, float decreaseNeed_amount, float increaseNeed_amount) {
 		super();
-		position = new Vector2(x,y);
-	}
-	
-	public JobAbstract(float x,float y,int maxApt){
-		super();
-		position = new Vector2(x,y);
-		maxProgress = maxApt;
-	}
-	
-	public JobAbstract(float x,float y, int maxProgress, int currentProgress, NeedAbstract decreasedNeed,
-			NeedAbstract increasedNeed) {
-		super();
-		this.position = new Vector2(x,y);
+		this.position = position;
 		this.maxProgress = maxProgress;
 		this.currentProgress = currentProgress;
-		this.decreasedNeed = decreasedNeed;
-		this.increasedNeed = increasedNeed;
+		this.decreasedNeed_id = decreasedNeed_id;
+		this.increasedNeed_id = increasedNeed_id;
+		this.decreaseNeed_amount = decreaseNeed_amount;
+		this.increaseNeed_amount = increaseNeed_amount;
 	}
-
 }
 
