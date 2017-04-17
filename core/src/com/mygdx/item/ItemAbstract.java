@@ -13,7 +13,7 @@ import com.mygdx.job.JobMove;
 import com.mygdx.job.JobRest;
 import com.mygdx.need.NeedAbstract;
 
-public abstract class ItemAbstract extends ObjectAbstract {
+public class ItemAbstract extends ObjectAbstract {
 	public int id;
 	public int ageTick;
 	public int maxAgeTick;
@@ -27,7 +27,9 @@ public abstract class ItemAbstract extends ObjectAbstract {
 	public float increasedNeed_amount;
 	
     private BitmapFont font;
-	
+	public ItemAbstract(){
+		
+	}
 	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,float decreasedNeed_amount, float increasedNeed_amount, ObjectNPC owner) {
 		super();
 		this.id = id;
@@ -51,15 +53,20 @@ public abstract class ItemAbstract extends ObjectAbstract {
 	public String getDisplayName(){
 		return this.name+"\n x "+this.stack_number;
 	}
-	public void getTaken(){
-		this.stack_number-=1;
+	public ItemAbstract getTaken(){
+		if(this.stack_number>=1){
+			this.stack_number-=1;
+			return new ItemAbstract(this.id,this.gPosition,this.price,this.name,1,this.decreasedNeed_id,this.increasedNeed_id,this.decreasedNeed_amount,this.increasedNeed_amount,null);
+
+		}
+		return null;
 	}
 	public void itemTimePass(){
 		this.rotation=(this.rotation+3)%360;
 		//ageTick+=1;
 	}
 	public boolean itemNeedDestroy(){
-		return ageTick>maxAgeTick  ||  stack_number==0;
+		return ageTick>maxAgeTick  ||  stack_number<=0;
 	}
 	public void render(SpriteBatch batch) {
     	//this.c2s();

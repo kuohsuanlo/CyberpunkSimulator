@@ -12,7 +12,7 @@ public abstract class JobAbstract {
 	public int increasedNeed_id;
 	public float decreaseNeed_amount;
 	public float increaseNeed_amount;
-
+	public boolean jobAborted;
 	public JobAbstract(Vector2 position, float maxProgress, float currentProgress, int decreasedNeed_id,
 			int increasedNeed_id, float decreaseNeed_amount, float increaseNeed_amount) {
 		super();
@@ -23,6 +23,7 @@ public abstract class JobAbstract {
 		this.increasedNeed_id = increasedNeed_id;
 		this.decreaseNeed_amount = decreaseNeed_amount;
 		this.increaseNeed_amount = increaseNeed_amount;
+		this.jobAborted =false;
 	}
 }
 

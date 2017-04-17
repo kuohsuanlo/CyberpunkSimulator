@@ -30,7 +30,7 @@ import com.mygdx.need.NeedThirst;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 10;
+	public static final int npc_number = 1000;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
@@ -105,7 +105,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	}	
 	private void initItem(){
 		for(int i=0;i<npc_number;i++){
-			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",3,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_THIRST_ID,50,50,null));
+			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",1,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_THIRST_ID,50,50,null));
 		}
 	}
 	public void addRandomItem(Vector2 loc){
