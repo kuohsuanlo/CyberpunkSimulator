@@ -1,11 +1,16 @@
 package com.mygdx.item;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.ObjectAbstract;
 import com.mygdx.game.ObjectNPC;
+import com.mygdx.job.JobAbstract;
+import com.mygdx.job.JobMove;
+import com.mygdx.job.JobRest;
 import com.mygdx.need.NeedAbstract;
 
 public abstract class ItemAbstract extends ObjectAbstract {
@@ -14,41 +19,66 @@ public abstract class ItemAbstract extends ObjectAbstract {
 	public int maxAgeTick;
 	public float price;
 	public String name;
+	public int stack_number ;
 	public ObjectNPC owner;
 	public int decreasedNeed_id;
 	public int increasedNeed_id;
 	
-	public ItemAbstract(int id,Vector2 gp, float price, String name, int decreasedNeed_id, int increasedNeed_id,ObjectNPC owner) {
+    private BitmapFont font;
+	
+	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,ObjectNPC owner) {
 		super();
 		this.id = id;
 		this.gPosition = gp;
 		this.price = price;
 		this.name = name;
+		this.stack_number = stack_number;
 		this.decreasedNeed_id = decreasedNeed_id;
 		this.increasedNeed_id = increasedNeed_id;
 		this.owner = owner;
 		this.maxAgeTick = 100;
 		
+		this.font = new BitmapFont(); 
+		
     	texture = new Texture("item/"+id+".png");
         xOffset = this.texture.getWidth()*0.5f;
         yOffset = this.texture.getHeight()*0.5f;
 	}
-	
+	public String getDisplayName(){
+		return this.name+"\n x "+this.stack_number;
+	}
+	public void getTaken(){
+		this.stack_number-=1;
+	}
 	public void itemTimePass(){
 		this.rotation=(this.rotation+3)%360;
-		ageTick+=1;
+		//ageTick+=1;
 	}
-	public boolean itemDestroy(){
-		return ageTick>maxAgeTick;
+	public boolean itemNeedDestroy(){
+		return ageTick>maxAgeTick  ||  stack_number==0;
 	}
-	@Override
 	public void render(SpriteBatch batch) {
     	this.c2s();
+    	this.renderSelf(batch);
+    	this.renderFont(batch);
+	}
+	
+	public void renderSelf(SpriteBatch batch) {
     	batch.draw(new TextureRegion(this.texture), 
     			this.sPosition.x-this.xOffset, this.gPosition.y-this.yOffset, 
     			this.texture.getWidth()/2, this.texture.getHeight()/2, 
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 
+	}
+	private void renderFont(SpriteBatch batch) {
+		
+		if(nearCursor()){
+			font.draw(batch, this.getDisplayName(), this.sPosition.x, this.sPosition.y+2*this.texture.getHeight());
+		}
+		
+	}
+	private boolean nearCursor(){
+		return new Vector2(Gdx.input.getX(),Gdx.graphics.getHeight()-Gdx.input.getY()).dst2(this.sPosition)<2500;
 	}
 
 }

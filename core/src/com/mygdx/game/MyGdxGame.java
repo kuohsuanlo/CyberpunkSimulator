@@ -1,5 +1,7 @@
 package com.mygdx.game;
 
+import java.util.Random;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -7,8 +9,12 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.ItemAbstract;
+import com.mygdx.item.ItemFood;
+import com.mygdx.need.NeedHunger;
+import com.mygdx.need.NeedThirst;
 
 
 
@@ -34,6 +40,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	private int[] map_buffer;
 	private ObjectNPC[] npc_list;
 	private Queue<ItemAbstract> item_queue;
+	
+	private Random random = new Random();
 	
 	@Override
 	public void create () {
@@ -85,7 +93,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 	}	
 	private void initItem(){
-		
+		for(int i=0;i<npc_number;i++){
+			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",100,NeedHunger.id,NeedThirst.id,null));
+		}
+	}
+	private Vector2 getRandomLoc(){
+		return new Vector2(random.nextFloat()*Gdx.graphics.getWidth(),random.nextFloat()*Gdx.graphics.getHeight());
 	}
 	
 	private void disposeNpc(){
@@ -102,7 +115,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private void callItem(){
 		for(int i=0;i<item_queue.size;i++){
 			item_queue.get(i).itemTimePass();
-			if(item_queue.get(i).itemDestroy()){
+			if(item_queue.get(i).itemNeedDestroy()){
 				item_queue.removeIndex(i);
 			}
 		}

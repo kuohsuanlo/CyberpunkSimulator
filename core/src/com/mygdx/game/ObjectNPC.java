@@ -15,26 +15,45 @@ import com.mygdx.job.*;
 import com.mygdx.need.*;
 
 public class ObjectNPC extends ObjectAbstract{
-	public static final int HUMAN = 0;
 	
-	public int species;
-	
+	// Inner id for system to quickly points to the index.
 	public int id;
+	
+	/*
+	 * Species : Probably human all the time, sometimes cats :p 
+	*/
+	public static final int HUMAN = 0;
+	private int species;
+	
+	/*
+	 * Body Parts : the parts, which are replaceable for the NPCs themselves. 
+	 */
+	private static int bpNumber = 6;
+	private ObjectBodyPart[] bpTraits;
+	
+	/*
+	 * Personal Ability : based on body part traits, chips, and other add-ons to the body parts.
+	 */
     private float speed;
     private float speed2;
     private float handReach;
     
+    /*
+     * Queues : to simulate the human behavior by creating the needs and daily jobs, or jobs driven by needs
+     */
+    private Queue<NeedAbstract> needQueue;
+    private Queue<JobAbstract> jobQueue;
+    private JobAbstract cjob;
+    private int maxJobNumber = 10;
+   
+    /*
+     * Font : for npc to print their own dialog bubbles, current goal, etc.
+     */
+    private BitmapFont font;
+	
+    private Random random = new Random();
     private ObjectMap inMap;
     
-    public Queue<NeedAbstract> needQueue;
-
-    public Queue<JobAbstract> jobQueue;
-    public JobAbstract cjob;
-    public int maxJobNumber = 10;
-    
-    public BitmapFont font = new BitmapFont(); 
-    
-	private Random random = new Random();
 
 
     public ObjectNPC(int gid, int tid,int species,ObjectMap im) {
@@ -42,34 +61,38 @@ public class ObjectNPC extends ObjectAbstract{
     	
     	this.id = gid;
     	this.species = species;
-    	this.gPosition.x = random.nextFloat()*Gdx.graphics.getWidth();
-    	this.gPosition.y = random.nextFloat()*Gdx.graphics.getHeight();
+    	
+    	gPosition.x = random.nextFloat()*Gdx.graphics.getWidth();
+    	gPosition.y = random.nextFloat()*Gdx.graphics.getHeight();
     	
     	texture = new Texture("npc/"+tid+".png");
         xOffset = this.texture.getWidth()*0.5f;
         yOffset = this.texture.getHeight()*0.5f;
     	
-    	speed =  2+(random.nextFloat()*5);
-    	speed2 = speed*speed;
-    	handReach = speed/2;
-    	
     	jobQueue = new Queue<JobAbstract>();
     	needQueue = new Queue<NeedAbstract>();
+    	bpTraits = new ObjectBodyPart[bpNumber];
+    	
+    	font = new BitmapFont(); 
     	
     	inMap = im;
+    	
+    	//initializing in-game data
     	initNeed();
+    	initBodyPartTraits();
+    	updatePersonalAbilities();
     }
-
+    
     public void doAI(){
     	//increase need
     	this.increaseNeed();
     	this.checkNeed();
     	
     	
-    	//
+    	//deciding the daily job(by professional)
     	this.decideJob();
     	
-    	//do the job in queue
+    	//doing the job in queue
     	this.doJob();
     	
     	
@@ -78,19 +101,35 @@ public class ObjectNPC extends ObjectAbstract{
 	public void render(SpriteBatch batch) {
     	this.c2s();
     	this.renderSelf(batch);
-    	this.renderJob(batch);
+    	this.renderFont(batch);
+	}
+	
+	private void initBodyPartTraits(){
+		for(int i=0;i<bpNumber;i++){
+			this.bpTraits[i] = new ObjectBodyPart(i,random.nextInt(10),random.nextInt(10),random.nextInt(10));
+		}
+	}
+	private void updatePersonalAbilities(){
+		//speed formula
+		float speed_tmp=0;
+		for(int i=0;i<bpNumber;i++){
+			speed_tmp+=this.bpTraits[i].traits.dex/10;
+		}
+		speed = speed_tmp;
+    	speed2 = speed*speed;
+    	handReach = speed/2;
 	}
 	
 	
     private void initNeed(){
-    	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,random.nextFloat()*100+100,null,null) );
-    	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,null,null) );
-    	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,0.05f,0,random.nextFloat()*100+100,null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,0.05f,0,random.nextFloat()*100+100,null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0.05f,0,random.nextFloat()*100+100,null,null) );
     }
     private void increaseNeed(){
     	if(this.species==ObjectNPC.HUMAN){
         	for(int i=0;i<needQueue.size;i++){
-        		needQueue.get(i).addNeed(0.1f);
+        		needQueue.get(i).tickNeed();
         	}
     	}
     }
@@ -100,8 +139,14 @@ public class ObjectNPC extends ObjectAbstract{
     		float c = needQueue.get(i).currentLevel;
     		float m = needQueue.get(i).maxLevel;
     		if(c>=m){
-    			if( (needQueue.get(i) instanceof NeedFatigue)  && !(cjob instanceof JobRest)){
-    				this.jobQueue.addFirst( new JobRest(this.gPosition,m,m-c,-1,-1,0f,0f));
+    			if( needQueue.get(i) instanceof NeedFatigue) {
+    				if (!(cjob instanceof JobRest)){
+    					this.jobQueue.addFirst( new JobRest(this.gPosition,m,m-c,-1,-1,0f,0f));
+    				}
+    			}
+    			else if( needQueue.get(i) instanceof NeedHunger) {
+    				
+    			
     			}
     		}
     	}
@@ -137,6 +182,11 @@ public class ObjectNPC extends ObjectAbstract{
 				return true;	
 			}
     	}
+    	else if(ja instanceof JobConsume){
+			if(ja.currentProgress>=ja.maxProgress){
+				return true;	
+			}
+    	}
     	return false;
     }
     
@@ -147,6 +197,10 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     	if(ja.decreasedNeed_id>=0){
     		this.needQueue.get(ja.decreasedNeed_id).addNeed(ja.decreaseNeed_amount);
+    	}
+    	
+    	if(ja instanceof JobConsume){
+			((JobConsume) ja).consumedItem.stack_number-=1;
     	}
     }
     
@@ -171,8 +225,10 @@ public class ObjectNPC extends ObjectAbstract{
     	rj.currentProgress+=1;
     	this.needQueue.get(NeedFatigue.id).addNeed(-1);
     }
-    
-
+    private void consumeItem(JobConsume cj){
+    	cj.currentProgress +=1 ;
+    }
+  
 	private void renderSelf(SpriteBatch batch) {
 		batch.draw(new TextureRegion(this.texture), 
     			this.sPosition.x-this.xOffset, this.gPosition.y-this.yOffset, 
@@ -180,7 +236,9 @@ public class ObjectNPC extends ObjectAbstract{
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 
 	}
-	private void renderJob(SpriteBatch batch) {
+	private void renderFont(SpriteBatch batch) {
+		
+		//rendering Job
 		for(int i=0;i<this.jobQueue.size;i++){
 			JobAbstract ja = this.jobQueue.get(i); 
 			if(ja instanceof JobRest){
@@ -193,9 +251,7 @@ public class ObjectNPC extends ObjectAbstract{
 	}
 	
 	private void printSelfInfo(){
-
     	Gdx.app.log("NPC"+this.id+"_JOB ", this.jobQueue.size+"/"+this.cjob);
-
     	Gdx.app.log("NPC"+this.id+"_NEED"+this.needQueue.get(0).id, this.needQueue.get(0).displayName+" : "+this.needQueue.get(0).currentLevel+"");
     	Gdx.app.log("NPC"+this.id+"_NEED"+this.needQueue.get(1).id, this.needQueue.get(1).displayName+" : "+this.needQueue.get(1).currentLevel+"");
     	Gdx.app.log("NPC"+this.id+"_NEED"+this.needQueue.get(2).id, this.needQueue.get(2).displayName+" : "+this.needQueue.get(2).currentLevel+"");

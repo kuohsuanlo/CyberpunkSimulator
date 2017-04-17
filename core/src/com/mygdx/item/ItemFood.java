@@ -8,8 +8,8 @@ import com.mygdx.need.NeedAbstract;
 
 public class ItemFood extends ItemAbstract{
 
-	public ItemFood(int id, Vector2 gp,float price, String name, int decreasedNeed_id, int increasedNeed_id, ObjectNPC owner) {
-		super(id, gp,price, name, decreasedNeed_id, increasedNeed_id, owner);
+	public ItemFood(int id, Vector2 gp,float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id, ObjectNPC owner) {
+		super(id, gp,price, name,stack_number, decreasedNeed_id, increasedNeed_id, owner);
 		// TODO Auto-generated constructor stub
 	}
 
