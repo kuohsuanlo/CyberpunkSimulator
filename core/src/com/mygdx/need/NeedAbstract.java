@@ -5,7 +5,11 @@ import com.mygdx.item.*;
 import com.mygdx.job.*;
 
 public abstract class NeedAbstract {
-	public static int id =-1;
+	public static int NEED_ABSTRACT_ID = -1;
+	public static int NEED_FATIGUE_ID = 0;
+	public static int NEED_HUNGER_ID = 1;
+	public static int NEED_THIRST_ID = 2;
+	public int id;
 	public String displayName;
 	public float searchRadius;
 	
@@ -13,9 +17,11 @@ public abstract class NeedAbstract {
 	public float currentLevel;
 	public float maxLevel;
 	
+	public boolean handledInQueue;
+	
 	/*
 	 * NeededItem : It is preferable by this NPC. Or in other words, this item is in this NPC's memory.
-	 * So when this NPC meets this need object, it will try to find this item first (whether it is null or not)
+	 * So when this NPC meets this need object, it will try to find this item first (whether it is zero-sized or not)
 	 * If it is null, it will make another linear search. In all, this could prevent unintended search.
 	 */
 	public Queue<ItemAbstract> neededItemQueue;
@@ -31,11 +37,15 @@ public abstract class NeedAbstract {
 		this.maxLevel = maxLevel;
 		this.neededItemQueue = neededItemQueue;
 		this.neededJobQueue = neededJobQueue;
+		this.handledInQueue = false;
+		this.id =NEED_ABSTRACT_ID;
+		this.initQueue();
 	}
 	
 	public NeedAbstract(String displayName, float searchRadius, float tickLevel, float currentLevel,
 			Queue<ItemAbstract> neededItemQueue, Queue<JobAbstract> neededJobQueue) {
 		super();
+		
 		this.displayName = displayName;
 		this.searchRadius = searchRadius;
 		this.tickLevel = tickLevel;
@@ -43,9 +53,19 @@ public abstract class NeedAbstract {
 		this.maxLevel = 100;
 		this.neededItemQueue = neededItemQueue;
 		this.neededJobQueue = neededJobQueue;
+		this.handledInQueue = false;
+		this.initQueue();
 	}
 	
-
+	private void initQueue(){
+		
+		if(this.neededItemQueue==null){
+			this.neededItemQueue= new Queue<ItemAbstract>();
+		}
+		if(this.neededJobQueue==null){
+			this.neededJobQueue= new Queue<JobAbstract>();
+		}
+	}
 	public void tickNeed(){
 		addNeed(tickLevel);
 	}

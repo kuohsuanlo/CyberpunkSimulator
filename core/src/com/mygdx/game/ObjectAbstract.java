@@ -28,13 +28,11 @@ public abstract class ObjectAbstract {
 	    scale = new Vector2(1, 1);
 	    rotation = 0;
 	}
-	public void update (float deltaTime) {
-	}
 
     public void c2s(){
     	this.sPosition.x =   this.gPosition.x;
     	this.sPosition.y =   this.gPosition.y;
     }
-	public abstract void render (SpriteBatch batch);
+;
 	
 }

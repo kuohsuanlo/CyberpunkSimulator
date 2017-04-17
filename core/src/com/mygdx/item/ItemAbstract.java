@@ -23,10 +23,12 @@ public abstract class ItemAbstract extends ObjectAbstract {
 	public ObjectNPC owner;
 	public int decreasedNeed_id;
 	public int increasedNeed_id;
+	public float decreasedNeed_amount;
+	public float increasedNeed_amount;
 	
     private BitmapFont font;
 	
-	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,ObjectNPC owner) {
+	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,float decreasedNeed_amount, float increasedNeed_amount, ObjectNPC owner) {
 		super();
 		this.id = id;
 		this.gPosition = gp;
@@ -35,6 +37,8 @@ public abstract class ItemAbstract extends ObjectAbstract {
 		this.stack_number = stack_number;
 		this.decreasedNeed_id = decreasedNeed_id;
 		this.increasedNeed_id = increasedNeed_id;
+		this.decreasedNeed_amount = decreasedNeed_amount;
+		this.increasedNeed_amount = increasedNeed_amount;
 		this.owner = owner;
 		this.maxAgeTick = 100;
 		
@@ -58,9 +62,9 @@ public abstract class ItemAbstract extends ObjectAbstract {
 		return ageTick>maxAgeTick  ||  stack_number==0;
 	}
 	public void render(SpriteBatch batch) {
-    	this.c2s();
-    	this.renderSelf(batch);
-    	this.renderFont(batch);
+    	//this.c2s();
+    	//this.renderSelf(batch);
+    	//this.renderFont(batch);
 	}
 	
 	public void renderSelf(SpriteBatch batch) {
@@ -70,7 +74,7 @@ public abstract class ItemAbstract extends ObjectAbstract {
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 
 	}
-	private void renderFont(SpriteBatch batch) {
+	public void renderFont(SpriteBatch batch) {
 		
 		if(nearCursor()){
 			font.draw(batch, this.getDisplayName(), this.sPosition.x, this.sPosition.y+2*this.texture.getHeight());

@@ -4,6 +4,8 @@ import java.util.Random;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -13,6 +15,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.item.ItemFood;
+import com.mygdx.need.NeedAbstract;
 import com.mygdx.need.NeedHunger;
 import com.mygdx.need.NeedThirst;
 
@@ -27,7 +30,7 @@ import com.mygdx.need.NeedThirst;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 100;
+	public static final int npc_number = 10;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
@@ -38,7 +41,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private int map_render_size_x ;
 	private int map_render_size_y ;
 	private int[] map_buffer;
-	private ObjectNPC[] npc_list;
+	private Queue<ObjectNPC> npc_queue;
 	private Queue<ItemAbstract> item_queue;
 	
 	private Random random = new Random();
@@ -49,6 +52,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		this.initMap();
 		this.initNpc();
 		this.initItem();
+		this.initModule();
 	}
 	
 
@@ -61,10 +65,14 @@ public class MyGdxGame extends ApplicationAdapter {
 		//this.drawTerrain();
 		
 		this.callItem();
-		this.drawItem();
-		
 		this.callNpc();
+		
+		this.drawItem();
 		this.drawNpc();
+		
+		this.drawItemFont();
+		this.drawNpcFont();
+		
 		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_number+" / FPS : "+Gdx.graphics.getFramesPerSecond());
 		
 		batch.end();
@@ -75,7 +83,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.dispose();
 		disposeNpc();
 	}
-	
+	private void initModule(){
+		InGameInputProcessor inputProcessor = new InGameInputProcessor(this);
+		Gdx.input.setInputProcessor(inputProcessor);
+	}
 	
 	
 	private void initMap(){
@@ -87,15 +98,18 @@ public class MyGdxGame extends ApplicationAdapter {
 		this.map_buffer = new int[this.map_render_size_x*this.map_render_size_y];
 	}
 	private void initNpc(){
-		npc_list = new ObjectNPC[npc_number];
+		npc_queue = new Queue<ObjectNPC>();
 		for(int id=0;id<npc_number;id++){
-			npc_list[id] = new ObjectNPC(id,id%npc_resource_nubmer,ObjectNPC.HUMAN,map);
+			npc_queue.addLast( new ObjectNPC(id,id%npc_resource_nubmer,ObjectNPC.HUMAN,map) );
 		}
 	}	
 	private void initItem(){
 		for(int i=0;i<npc_number;i++){
-			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",100,NeedHunger.id,NeedThirst.id,null));
+			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",3,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_THIRST_ID,50,50,null));
 		}
+	}
+	public void addRandomItem(Vector2 loc){
+		item_queue.addFirst(new ItemFood(5,loc ,0,"free food",1,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_THIRST_ID,50,50,null));
 	}
 	private Vector2 getRandomLoc(){
 		return new Vector2(random.nextFloat()*Gdx.graphics.getWidth(),random.nextFloat()*Gdx.graphics.getHeight());
@@ -103,12 +117,12 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	private void disposeNpc(){
 		for(int i=0;i<npc_number;i++){
-			npc_list[i].texture.dispose();
+			npc_queue.get(i).texture.dispose();
 		}
 	}
 	private void callNpc(){
 		for(int i=0;i<npc_number;i++){
-			npc_list[i].doAI();
+			npc_queue.get(i).doAI();
 		}
 		
 	}
@@ -123,16 +137,31 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	private void drawNpc(){
 		for(int i=0;i<npc_number;i++){
-			npc_list[i].render(batch);
+			//npc_list[i].render(batch);
+			npc_queue.get(i).c2s();
+			npc_queue.get(i).renderSelf(batch);
 		}	
 	}
 	
 	private void drawItem(){
 		for(int i=0;i<item_queue.size;i++){
-			item_queue.get(i).render(batch);
+			item_queue.get(i).c2s();
+			item_queue.get(i).renderSelf(batch);
 		}
 	}
 	
+	private void drawNpcFont(){
+		for(int i=0;i<npc_number;i++){
+			//npc_list[i].render(batch);
+			npc_queue.get(i).renderFont(batch);
+		}	
+	}
+	
+	private void drawItemFont(){
+		for(int i=0;i<item_queue.size;i++){
+			item_queue.get(i).renderFont(batch);
+		}
+	}
 	private void drawTerrain(){
 		//Get rendered area's data into 1-dimension array
 		for(int i=0;i<this.map_render_size_x;i++){
@@ -146,8 +175,67 @@ public class MyGdxGame extends ApplicationAdapter {
 			batch.draw(map.tr_texture[this.map_buffer[i]],this.current_block_size*(i/this.map_render_size_x),current_block_size*(i%this.map_render_size_x));
 		}
 	}
+	public Vector2 s2c(int x, int y){
+		return new Vector2(x,Gdx.graphics.getHeight()-y);
 
-	
-	
+	}
+}
 
+class InGameInputProcessor implements InputProcessor {
+    private MyGdxGame mgg;
+	public InGameInputProcessor(MyGdxGame mgg){
+		this.mgg = mgg;
+	}
+	
+	@Override
+    public boolean touchDown (int x, int y, int pointer, int button) {
+    	if (button == Input.Buttons.LEFT) {
+    		// Put food (testing)
+    		mgg.addRandomItem(mgg.s2c(x, y));
+    		return true;     
+    	}
+    	return false;
+    }
+
+	@Override
+	public boolean keyDown(int keycode) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean keyUp(int keycode) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean keyTyped(char character) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean touchDragged(int screenX, int screenY, int pointer) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean mouseMoved(int screenX, int screenY) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean scrolled(int amount) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
