@@ -21,9 +21,9 @@ public class ObjectNPC extends ObjectAbstract{
 	 * AI recalculating time
 	 */
 	private float currentTimeRC ;
-	private float maxTimeRC = 0.5f;
+	private float maxTimeRC = 1f;
 	private float speedBase = 60f;
-	private int expectedLifeInSec = 300;
+	private int expectedLifeInSec = 3600;
 	
 	/*
 	 * Species : Probably human all the time, sometimes cats :p 
