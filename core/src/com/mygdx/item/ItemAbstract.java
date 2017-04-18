@@ -51,12 +51,16 @@ public class ItemAbstract extends ObjectAbstract {
         yOffset = this.texture.getHeight()*0.5f;
 	}
 	public String getDisplayName(){
-		return this.name+"\n x "+this.stack_number;
+		return this.name+" x "+this.stack_number;
 	}
-	public ItemAbstract getTaken(){
-		if(this.stack_number>=1){
-			this.stack_number-=1;
-			return new ItemAbstract(this.id,this.gPosition,this.price,this.name,1,this.decreasedNeed_id,this.increasedNeed_id,this.decreasedNeed_amount,this.increasedNeed_amount,null);
+	public ItemAbstract getTaken(int number){
+		int tkNumber = this.stack_number;
+		if(tkNumber>=number){
+			tkNumber = number;
+		}
+		if(this.stack_number>=tkNumber){
+			this.stack_number-=tkNumber;
+			return new ItemAbstract(this.id,this.gPosition,this.price,this.name,tkNumber,this.decreasedNeed_id,this.increasedNeed_id,this.decreasedNeed_amount,this.increasedNeed_amount,null);
 
 		}
 		return null;
@@ -87,9 +91,6 @@ public class ItemAbstract extends ObjectAbstract {
 			font.draw(batch, this.getDisplayName(), this.sPosition.x, this.sPosition.y+2*this.texture.getHeight());
 		}
 		
-	}
-	private boolean nearCursor(){
-		return new Vector2(Gdx.input.getX(),Gdx.graphics.getHeight()-Gdx.input.getY()).dst2(this.sPosition)<2500;
 	}
 
 }

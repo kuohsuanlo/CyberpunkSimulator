@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -33,6 +34,10 @@ public abstract class ObjectAbstract {
     	this.sPosition.x =   this.gPosition.x;
     	this.sPosition.y =   this.gPosition.y;
     }
-;
+
+    public abstract String getDisplayName();
+	public boolean nearCursor(){
+		return new Vector2(Gdx.input.getX(),Gdx.graphics.getHeight()-Gdx.input.getY()).dst2(this.sPosition)<1000;
+	}
 	
 }
