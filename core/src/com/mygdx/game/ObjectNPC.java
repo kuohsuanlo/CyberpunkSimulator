@@ -17,9 +17,6 @@ import com.mygdx.need.*;
 
 public class ObjectNPC extends ObjectAbstract{
 	
-	// Inner id for system to quickly points to the index.
-	public int id;
-	
 	/*
 	 * Species : Probably human all the time, sometimes cats :p 
 	 */
@@ -35,6 +32,8 @@ public class ObjectNPC extends ObjectAbstract{
 	/*
 	 * Personal Ability : based on body part traits, chips, and other add-ons to the body parts.
 	 */
+	private float lifeStatus;
+	private float maxLifeStatus;
     private float speed;
     private float speed2;
     private float handReach;
@@ -47,23 +46,23 @@ public class ObjectNPC extends ObjectAbstract{
     private Queue<NeedAbstract> needQueue;
     private Queue<JobAbstract> jobQueue;
     private JobAbstract cjob;
-    private int maxJobNumber = 10;
    
     /*
      * Font : for npc to print their own dialog bubbles, current goal, etc.
      */
     private BitmapFont font;
 	
-    private Random random = new Random();
+    private Random random;
     private ObjectMap inMap;
     
 
     
-    public ObjectNPC(int gid, int tid,int species,ObjectMap im) {
+    public ObjectNPC(int gid, int tid,int species,ObjectMap im, Random random) {
     	super();
     	
     	this.id = gid;
     	this.species = species;
+    	this.random = random;
     	
     	gPosition.x = random.nextFloat()*Gdx.graphics.getWidth();
     	gPosition.y = random.nextFloat()*Gdx.graphics.getHeight();
@@ -84,17 +83,18 @@ public class ObjectNPC extends ObjectAbstract{
     	//initializing in-game data
     	initNeed();
     	initBodyPartTraits();
+    	initPersonalAbilities();
     	initItem();
     	
-    	updatePersonalAbilities();
     }
     
     public void doAI(){
-    	this.printSelfInfo();
+    	//this.printSelfInfo();
     	
     	//increase need
     	this.increaseNeed();
     	this.checkNeed();
+    	this.cycleBody();
     	
     	//refresh queue, pop-out object such as null item (remove by system, used by others, etc)
     	this.refreshQueue();
@@ -114,9 +114,9 @@ public class ObjectNPC extends ObjectAbstract{
 		}
 	}
 	private void initItem(){
-		this.itemQueue.addLast(new ItemFood(5, null ,0,"free food",1,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_THIRST_ID,50,50,null));
+		
 	}
-	private void updatePersonalAbilities(){
+	private void initPersonalAbilities(){
 		//speed formula
 		float speed_tmp=0;
 		float baseEC_tmp=0;
@@ -129,7 +129,8 @@ public class ObjectNPC extends ObjectAbstract{
     	this.handReach = speed/2;
     	this.baseEnergyConsumption = baseEC_tmp/120;
     	
-    	
+    	this.maxLifeStatus = baseEnergyConsumption*500;
+    	this.lifeStatus = baseEnergyConsumption*500;
 	}
 	
 	
@@ -146,57 +147,102 @@ public class ObjectNPC extends ObjectAbstract{
         	}
     	}
     }
-    
+    private void cycleBody(){
+    	boolean allNeedPassed= true;
+    	for(int i=0;i<this.needQueue.size;i++){
+    		if(this.needQueue.get(i).currentLevel>=this.needQueue.get(i).maxLevel){
+    			this.damageBody(this.baseEnergyConsumption);
+    			allNeedPassed = false;
+    		}
+    	}
+    	if(allNeedPassed){
+    		this.recoverBody(this.baseEnergyConsumption*0.5f);
+    	}
+    }
+    private void recoverBody(float amount){
+    	if(this.lifeStatus-amount>this.maxLifeStatus){
+    		this.lifeStatus=this.maxLifeStatus;
+    	}
+    	else{
+    		this.lifeStatus+=amount;
+    	}
+    }
+    private void damageBody(float amount){
+    	if(this.lifeStatus-amount<=0){
+    		this.lifeStatus=0;
+    	}
+    	else{
+    		this.lifeStatus-=amount;
+    	}
+    }
+    public boolean isNpcDead(){
+    	return this.lifeStatus<=0;
+    }
     private void checkNeed(){
     	for(int i=0;i<needQueue.size;i++){
     		float c = needQueue.get(i).currentLevel;
     		float m = needQueue.get(i).maxLevel;
-    		if(c>=m){
-    			if( needQueue.get(i) instanceof NeedFatigue) {
-    				if (!needQueue.get(i).handledInQueue){
-    					this.jobQueue.addFirst( new JobRest(this.gPosition,m,m-c,0,0,0f,0f));
-    					needQueue.get(i).handledInQueue = true;
-    				}
-    			}
-    			else if( needQueue.get(i) instanceof NeedHunger  ||  needQueue.get(i) instanceof NeedThirst) {
-    				//no candidates item in queue, start to search
-    				if(needQueue.get(i).neededItemQueue.size==0 ){
-    					ItemAbstract onBodyItem = this.findItemOnBody(needQueue.get(i));
-    					ItemAbstract onGroundItem = this.findItemOnGround(needQueue.get(i));
-    					if(onBodyItem !=null){
-    	    				//just on NPC body
-    						needQueue.get(i).neededItemQueue.addLast(onBodyItem);
-    	    				if (!needQueue.get(i).handledInQueue){
-    	    					ItemAbstract goal = needQueue.get(i).neededItemQueue.first();
-    	    					goal.gPosition = this.gPosition;
-    	        				this.jobQueue.addFirst( new JobConsume(goal.gPosition,m,m-c,0,0,0f,0f,goal));
-    	        				needQueue.get(i).handledInQueue = true;
-    	    				}
-    					}
-    					else if(onGroundItem!=null){
-    						//go to candidates item's location.
-    						needQueue.get(i).neededItemQueue.addLast(onGroundItem);
-    	    				if (!needQueue.get(i).handledInQueue){
-    	    					ItemAbstract goal = needQueue.get(i).neededItemQueue.first();
-    	    					this.jobQueue.addLast(new JobMove(goal.gPosition,-1, -1, 0, 0,0,0));
-    	    					this.jobQueue.addLast(new JobTake(goal.gPosition,-1,-1,0,0,0,0,goal));
-    	        				this.jobQueue.addLast( new JobConsume(goal.gPosition,m,m-c,0,0,0f,0f,goal));
-    	        				needQueue.get(i).handledInQueue = true;
-    	    				}
-    					}
-    					else{
-    						//no item to solve the need. Let's rest (ignore) and see.
-    						if (!needQueue.get(i).handledInQueue){
-    	    					
-    	    				}
-    					}
-    				}
-    				else{
-    					
-    				}
+    		
+    		if(c<m) continue;
 
-    				
-    			}
+			if( needQueue.get(i) instanceof NeedFatigue) {
+				if (!needQueue.get(i).handledInQueue){
+					this.jobQueue.addFirst( new JobRest(this.gPosition,m,m-c,0,0,0f,0f));
+					needQueue.get(i).handledInQueue = true;
+				}
+			}
+			else if( needQueue.get(i) instanceof NeedHunger  ||  needQueue.get(i) instanceof NeedThirst) {
+				//no candidates item in queue, start to search
+				ItemAbstract onBodyItem ;
+				ItemAbstract onGroundItem ;
+				ItemAbstract goal;
+				
+				//NPC has no idea where the item is
+				if(needQueue.get(i).neededItemQueue.size==0 ){
+					//find it on NPC body
+					onBodyItem = this.findItemOnBody(needQueue.get(i));
+					
+					//found
+					if(onBodyItem!=null){
+						needQueue.get(i).neededItemQueue.addLast(onBodyItem);
+					}
+					//not found
+					else{
+						//find it on the ground
+						onGroundItem = this.findItemOnGround(needQueue.get(i));
+						
+						//found 
+						if(onGroundItem!=null){
+    	    				if (!needQueue.get(i).handledInQueue){
+    	    					goal = onGroundItem;
+    	    					this.jobQueue.addLast(new JobMove(goal.gPosition,-1, -1, 0, 0,0,0));
+    	    					JobConsume pendingCJ = new JobConsume(goal.gPosition,m,m-c,0,0,0f,0f,null);
+    	    					
+    	    					this.jobQueue.addLast(new JobTake(goal.gPosition,-1,-1,goal.decreasedNeed_id,0,0f,0f,goal,pendingCJ));
+    	        				this.jobQueue.addLast(pendingCJ);
+    	        				needQueue.get(i).handledInQueue = true;
+    	    				}
+						}
+						//not found, screw the NPC. Ignore the need.
+						else{
+							//no item to solve the need. Let's rest (ignore) and see.
+							if (!needQueue.get(i).handledInQueue){
+								
+		    				}
+						}
+					}
+				}
+				//NPC know it's on its body
+				else{
+					onBodyItem = this.needQueue.get(i).neededItemQueue.first();
+    				//just on NPC body
+    				if (!needQueue.get(i).handledInQueue){
+    					goal = needQueue.get(i).neededItemQueue.first();
+    					goal.gPosition = this.gPosition;
+        				this.jobQueue.addFirst( new JobConsume(goal.gPosition,m,m-c,goal.decreasedNeed_id,0,0f,0f,goal));
+        				needQueue.get(i).handledInQueue = true;
+    				}
+				}
     		}
     	}
     }
@@ -225,11 +271,20 @@ public class ObjectNPC extends ObjectAbstract{
 		return null;	
 
     }
+    
+    
     private ItemAbstract findItemForNeed(Queue<ItemAbstract> q, int NEED_ID){
+    	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
+    	/*
+    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
+    	 */
     	for(int i=0;i<q.size;i++){
     		if(q.get(i).decreasedNeed_id==NEED_ID){
-    			return q.get(i);
+    			candidates.addFirst(q.get(i));
     		}
+    	}
+    	if(candidates.size>0){
+    		return candidates.get(random.nextInt(candidates.size));
     	}
     	return null;
     }
@@ -251,8 +306,18 @@ public class ObjectNPC extends ObjectAbstract{
     			itemQueue.removeIndex(i);
     		}
     	}
-
-    	
+    }
+    private void getItem(ItemAbstract ia1){
+    	for(int i=0;i<itemQueue.size;i++){
+    		if(itemQueue.get(i).id ==  ia1.id){
+    			//stackable
+    			if( itemQueue.get(i).compareItemAbstract(ia1) ){
+    				itemQueue.get(i).stack_number+=ia1.stack_number;
+    				return;
+    			}
+    		}
+    	}
+    	this.itemQueue.addLast(ia1);
     }
     private void doJob(){   
     	//get first job(current)
@@ -307,12 +372,15 @@ public class ObjectNPC extends ObjectAbstract{
     }
     
     private void jobConsequence(JobAbstract ja){
+
+    	
+		this.needQueue.get(ja.decreasedNeed_id).handledInQueue=false;
+		
     	/*
     	 * Consequences of Job itself (handledInQueue checked by behavior itself)
     	 */
 		if(ja.decreasedNeed_id>=0  &&  !ja.jobAborted){
     		this.needQueue.get(ja.decreasedNeed_id).addNeed(ja.decreaseNeed_amount*-1);
-    		this.needQueue.get(ja.decreasedNeed_id).handledInQueue=false;
     	}
     	
     	if(ja.increasedNeed_id>=0  &&  !ja.jobAborted){
@@ -321,24 +389,33 @@ public class ObjectNPC extends ObjectAbstract{
     	
     	/*
     	 * Reducing the number of used, consumed items.  (handledInQueue checked by item itself)
+    	 * And get the destroyed item, such as water into empty bottle.
     	 */
     	if(ja instanceof JobConsume){
-    		ItemAbstract Itmp = ((JobConsume) ja).consumedItem;
-
-        	
-    		
     		if(!ja.jobAborted){
+        		ItemAbstract Itmp = null;
+        		ItemAbstract IDtmp =null;
+        		
+        		Itmp = ((JobConsume) ja).consumedItem;
+        		if(Itmp!=null  &&  Itmp.hasDestroyedItem()){
+        			IDtmp = Itmp.getOneDestroyedItem();
+        		}
+        		
+    			if(IDtmp!=null){
+        			this.getItem(IDtmp);
+    			}
     			Itmp.stack_number-=1;
     		}
-    		this.needQueue.get(Itmp.decreasedNeed_id).handledInQueue=false; 
     	}
+
+    	/*
+    	 * Taking item is an instant behavior, the number of items are reduced when splitting the item stack.
+    	 * It is not the NPC's conseqence. So we don't reduce the number here. 
+    	 */
     	else if(ja instanceof JobTake){
-    		ItemAbstract Itmp = ((JobTake) ja).takenItem;
-    		if(!ja.jobAborted){
-    			Itmp.stack_number-=1;
-    		} 
-    		this.produceItem();
+    		
     	}
+    	
     }
     private void decideJob(){
     	if(this.jobQueue.size==0){
@@ -366,11 +443,13 @@ public class ObjectNPC extends ObjectAbstract{
     	if(cj.consumedItem==null){
     		cj.jobAborted = true;
     		cj.currentProgress = cj.maxProgress;
+
     		return;
     	}
     	else if(cj.consumedItem.stack_number<=0){
     		cj.jobAborted = true;
     		cj.currentProgress = cj.maxProgress;
+
     		return;
     	}
     	
@@ -392,10 +471,16 @@ public class ObjectNPC extends ObjectAbstract{
     		tj.currentProgress = tj.maxProgress;
     		return;
     	}
-
-		tj.currentProgress = tj.maxProgress;
-    	this.itemQueue.addFirst(tj.takenItem.getTaken(this.determineTakingItemNumber()) );
     	
+		ItemAbstract tkItem = tj.takenItem.getTaken(this.determineTakingItemNumber()) ;
+    	this.getItem(tkItem);
+    	
+    	//Filling information for the taken item
+    	if(tj.nextPendingJob!=null  && tj.nextPendingJob instanceof JobConsume){
+    		((JobConsume)tj.nextPendingJob).consumedItem=tkItem;
+    		((JobConsume)tj.nextPendingJob).position=this.gPosition;
+    	}
+		tj.currentProgress = tj.maxProgress;
     }
     private int determineTakingItemNumber(){
     	return random.nextInt(3)+1;
@@ -427,27 +512,31 @@ public class ObjectNPC extends ObjectAbstract{
 		else if(ja instanceof JobMove){
 			font.draw(batch, this.id+"", ja.position.x, ja.position.y);
 		}
-		
+	
+	
 		
 		if(nearCursor()){
+			String Stmp = "";
+			int line =0;
 			for(int i=0;i<this.needQueue.size;i++){
-				String Stmp = this.needQueue.get(i).displayName+" : "+Math.round(this.needQueue.get(i).currentLevel)+"/"+Math.round(this.needQueue.get(i).maxLevel);
-				font.draw(batch, Stmp,this.gPosition.x, this.gPosition.y+this.texture.getHeight()*0.5f*i);
+				Stmp+= this.needQueue.get(i).displayName+" : "+Math.round(this.needQueue.get(i).currentLevel)+"/"+Math.round(this.needQueue.get(i).maxLevel);
+				Stmp+="\n";
+				line+=1;
 			}	
-			float yOffsetByNeed = this.texture.getHeight()*0.5f*(this.needQueue.size);
-			font.draw(batch, "--------",this.gPosition.x, this.gPosition.y+yOffsetByNeed);
-			yOffsetByNeed = this.texture.getHeight()*0.5f*(this.needQueue.size+1);
-
 			for(int i=0;i<this.itemQueue.size;i++){
-				String Stmp = this.itemQueue.get(i).getDisplayName();
-				font.draw(batch, Stmp,this.gPosition.x, this.gPosition.y+this.texture.getHeight()*0.5f*i+yOffsetByNeed);
-			}	
+				Stmp+=this.itemQueue.get(i).getDisplayName();
+				Stmp+="\n";
+				line+=1;
+			}
+			Stmp+=Math.round(this.lifeStatus)+"/"+Math.round(this.baseEnergyConsumption*500);
+			line+=1;
+			font.draw(batch, Stmp,this.gPosition.x, this.gPosition.y+this.texture.getHeight()*0.5f*line);
+
 		}
 		
 
 	}
 	
-	@Override
 	public String getDisplayName() {
 		// TODO Auto-generated method stub
 		return "NPC : "+this.id;
