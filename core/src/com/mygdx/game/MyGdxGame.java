@@ -30,13 +30,11 @@ import com.mygdx.need.NeedThirst;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 50;
+	public static final int npc_number = 1000;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
 	private ObjectMap map;
-	
-	
 	
 	private int map_render_size_x ;
 	private int map_render_size_y ;
@@ -62,6 +60,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		
 		//this.drawTerrain();
 		
 		this.callItem();
@@ -104,21 +103,22 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 	}	
 	private void initItem(){
-		//(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,float decreasedNeed_amount, float increasedNeed_amount, ObjectNPC owner, ItemAbstract destroyedItem) {
 		ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
 		
 		for(int i=0;i<npc_number;i++){
-			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",2,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null));
-			item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",2,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null,bucket));
+			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",1,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null));
+			item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",1,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null,bucket));
 		}
 	}
-	public void addRandomItem(Vector2 loc){
-		if(random.nextBoolean()){
-			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",1,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null));
-		}
-		else{
-			ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
-			item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",1,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null,bucket));
+	public void addRandomItem(Vector2 loc, int times){
+		for(int i=0;i<times;i++){
+			if(random.nextBoolean()){
+				item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",1,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null));
+			}
+			else{
+				ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
+				item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",1,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null,bucket));
+			}
 		}
 	}
 	private Vector2 getRandomLoc(){
@@ -128,6 +128,11 @@ public class MyGdxGame extends ApplicationAdapter {
 	private void disposeNpc(){
 		for(int i=0;i<npc_queue.size;i++){
 			npc_queue.get(i).texture.dispose();
+		}
+	}
+	private void callResource(){
+		if(random.nextDouble()<0.01){
+			this.addRandomItem(this.getRandomLoc(), 1);
 		}
 	}
 	private void callNpc(){
@@ -204,7 +209,7 @@ class InGameInputProcessor implements InputProcessor {
     public boolean touchDown (int x, int y, int pointer, int button) {
     	if (button == Input.Buttons.LEFT) {
     		// Put food (testing)
-    		mgg.addRandomItem(mgg.s2c(x, y));
+    		mgg.addRandomItem(mgg.s2c(x, y),1);
     		return true;     
     	}
     	return false;

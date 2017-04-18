@@ -119,12 +119,10 @@ public class ItemAbstract extends ObjectAbstract {
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 
 	}
-	public void renderFont(SpriteBatch batch) {
-		
+	public void renderFont(SpriteBatch batch) {	
 		if(nearCursor()){
 			font.draw(batch, this.getDisplayName(), this.sPosition.x, this.sPosition.y+2*this.texture.getHeight());
 		}
-		
 	}
 
 }

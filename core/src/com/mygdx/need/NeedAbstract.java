@@ -71,6 +71,7 @@ public abstract class NeedAbstract {
 		addNeed(tickLevel);
 	}
 	public void addNeed(float amount){
+		
 		if(currentLevel+amount<maxLevel){
 			currentLevel +=amount;
 		}

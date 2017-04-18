@@ -18,6 +18,14 @@ import com.mygdx.need.*;
 public class ObjectNPC extends ObjectAbstract{
 	
 	/*
+	 * AI recalculating time
+	 */
+	private float currentTimeRC ;
+	private float maxTimeRC = 0.5f;
+	private float speedBase = 60f;
+	private int expectedLifeInSec = 300;
+	
+	/*
 	 * Species : Probably human all the time, sometimes cats :p 
 	 */
 	public static final int HUMAN = 0;
@@ -35,8 +43,6 @@ public class ObjectNPC extends ObjectAbstract{
 	private float lifeStatus;
 	private float maxLifeStatus;
     private float speed;
-    private float speed2;
-    private float handReach;
     private float baseEnergyConsumption;
     
     /*
@@ -53,9 +59,7 @@ public class ObjectNPC extends ObjectAbstract{
     private BitmapFont font;
 	
     private Random random;
-    private ObjectMap inMap;
-    
-
+    private ObjectMap inMap; 
     
     public ObjectNPC(int gid, int tid,int species,ObjectMap im, Random random) {
     	super();
@@ -63,6 +67,7 @@ public class ObjectNPC extends ObjectAbstract{
     	this.id = gid;
     	this.species = species;
     	this.random = random;
+    	this.currentTimeRC = random.nextFloat()*this.maxTimeRC;
     	
     	gPosition.x = random.nextFloat()*Gdx.graphics.getWidth();
     	gPosition.y = random.nextFloat()*Gdx.graphics.getHeight();
@@ -83,29 +88,47 @@ public class ObjectNPC extends ObjectAbstract{
     	//initializing in-game data
     	initNeed();
     	initBodyPartTraits();
-    	initPersonalAbilities();
     	initItem();
+    	initPersonalAbilities();
     	
     }
     
     public void doAI(){
-    	//this.printSelfInfo();
     	
-    	//increase need
+    	
+    	//body status changes and takes effect
     	this.increaseNeed();
-    	this.checkNeed();
     	this.cycleBody();
     	
-    	//refresh queue, pop-out object such as null item (remove by system, used by others, etc)
-    	this.refreshQueue();
-    	   	
-    	//deciding the daily job(by professional)
-    	this.decideJob();
+    	//reducing the AI calculating burden
+    	this.addRC();
+    	if(this.needRC()){
+    		//this.printSelfInfo();
+    		
+    		//increase need
+        	this.checkNeed();
+        	this.updatePersonalAbilities();
+        	//deciding the daily job(by professional)
+        	this.decideJob();
+    	}
+    	this.recoverRC();
     	
     	//doing the job in queue
     	this.doJob();
-    	
-    	
+    	//refresh queue, pop-out object such as null item (remove by system, used by others, etc)
+    	this.refreshQueue();  
+    }
+    private void addRC(){
+    	this.currentTimeRC+=Gdx.graphics.getDeltaTime();
+    }
+    private void recoverRC(){
+    	if(this.needRC()){
+        	this.currentTimeRC=0;
+    	}
+    }
+    private boolean needRC(){
+    	//return true;;
+    	return this.currentTimeRC>=this.maxTimeRC;
     }
 
 	private void initBodyPartTraits(){
@@ -124,15 +147,26 @@ public class ObjectNPC extends ObjectAbstract{
 			speed_tmp+=this.bpTraits[i].traits.dex;
 			baseEC_tmp+=(this.bpTraits[i].traits.str+this.bpTraits[i].traits.vit);
 		}
-		this.speed = speed_tmp;
-    	this.speed2 = speed*speed;
-    	this.handReach = speed/2;
-    	this.baseEnergyConsumption = baseEC_tmp/120;
+		this.speed = speed_tmp*speedBase;
+    	this.baseEnergyConsumption = (baseEC_tmp)*(1f/60);
     	
-    	this.maxLifeStatus = baseEnergyConsumption*500;
-    	this.lifeStatus = baseEnergyConsumption*500;
+    	this.maxLifeStatus = baseEnergyConsumption*60*expectedLifeInSec;
+    	this.lifeStatus = baseEnergyConsumption*60*expectedLifeInSec;
+    	
 	}
-	
+	private void updatePersonalAbilities(){
+		float speed_tmp=0;
+		float baseEC_tmp=0;
+		for(int i=0;i<bpNumber;i++){
+			speed_tmp+=this.bpTraits[i].traits.dex;
+			baseEC_tmp+=(this.bpTraits[i].traits.str+this.bpTraits[i].traits.vit);
+		}
+		this.speed = speed_tmp*speedBase;
+    	this.baseEnergyConsumption = baseEC_tmp*Gdx.graphics.getDeltaTime();
+    	
+
+	}
+
 	
     private void initNeed(){
     	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,0,0,100,null,null) );
@@ -176,14 +210,17 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     }
     public boolean isNpcDead(){
+    	//return false;
     	return this.lifeStatus<=0;
     }
     private void checkNeed(){
+    	
+    	
     	for(int i=0;i<needQueue.size;i++){
     		float c = needQueue.get(i).currentLevel;
     		float m = needQueue.get(i).maxLevel;
     		
-    		if(c<m) continue;
+    		if(c<m) continue; 
 
 			if( needQueue.get(i) instanceof NeedFatigue) {
 				if (!needQueue.get(i).handledInQueue){
@@ -300,6 +337,7 @@ public class ObjectNPC extends ObjectAbstract{
 				}
 			}
     	}
+    	
     	for(int i=0;i<itemQueue.size;i++){
     		itemQueue.get(i).itemTimePass();
     		if(itemQueue.get(i).itemNeedDestroy()){
@@ -321,9 +359,13 @@ public class ObjectNPC extends ObjectAbstract{
     }
     private void doJob(){   
     	//get first job(current)
-    	cjob = jobQueue.first();
-
+    	if(jobQueue.size==0){
+    		return;
+    	}
+    	
+    	
     	//do job
+    	cjob = jobQueue.first();
     	if(cjob instanceof JobMove){
     		JobMove mj = (JobMove)cjob;
     		this.walkOneTick(mj);
@@ -345,11 +387,13 @@ public class ObjectNPC extends ObjectAbstract{
     	if(checkJobDone(cjob)){
     		this.jobConsequence(cjob);
 			this.jobQueue.removeFirst();
+	    	cjob=null;
     	}
     }
     private boolean checkJobDone(JobAbstract ja){
+
     	if(ja instanceof JobMove){
-    		if(this.gPosition.dst(ja.position)<=this.handReach){
+    		if(this.gPosition.dst(ja.position)<=1){
 				return true;
     		}
     	}
@@ -368,12 +412,12 @@ public class ObjectNPC extends ObjectAbstract{
 				return true;	
 			}
     	}
+    	
     	return false;
     }
     
     private void jobConsequence(JobAbstract ja){
 
-    	
 		this.needQueue.get(ja.decreasedNeed_id).handledInQueue=false;
 		
     	/*
@@ -418,6 +462,7 @@ public class ObjectNPC extends ObjectAbstract{
     	
     }
     private void decideJob(){
+    	
     	if(this.jobQueue.size==0){
     		float x_d = random.nextFloat()*Gdx.graphics.getWidth();
     		float y_d = random.nextFloat()*Gdx.graphics.getHeight();
@@ -425,11 +470,11 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     }
     private void walkOneTick(JobMove mj){
-    	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed((this.speed/this.bpTraits.length)*this.baseEnergyConsumption);
+    	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed(this.baseEnergyConsumption);
     	Vector2 vtmp = new Vector2(mj.position.x - this.gPosition.x, mj.position.y - this.gPosition.y);
     	
-    	if(vtmp.len2()>speed2){
-        	vtmp.setLength(this.speed);
+    	if(vtmp.len()>this.speed*Gdx.graphics.getDeltaTime()){
+        	vtmp.setLength(this.speed*Gdx.graphics.getDeltaTime());
     	}
     	this.rotation = vtmp.angle();
     	this.gPosition.add(vtmp);
@@ -519,6 +564,10 @@ public class ObjectNPC extends ObjectAbstract{
 			String Stmp = "";
 			int line =0;
 			for(int i=0;i<this.needQueue.size;i++){
+				if(this.needQueue.get(i).handledInQueue)
+					Stmp+="+";
+				else
+					Stmp+="-";
 				Stmp+= this.needQueue.get(i).displayName+" : "+Math.round(this.needQueue.get(i).currentLevel)+"/"+Math.round(this.needQueue.get(i).maxLevel);
 				Stmp+="\n";
 				line+=1;
@@ -528,7 +577,7 @@ public class ObjectNPC extends ObjectAbstract{
 				Stmp+="\n";
 				line+=1;
 			}
-			Stmp+=Math.round(this.lifeStatus)+"/"+Math.round(this.baseEnergyConsumption*500);
+			Stmp+=Math.round(this.lifeStatus)+"/"+Math.round(this.maxLifeStatus);
 			line+=1;
 			font.draw(batch, Stmp,this.gPosition.x, this.gPosition.y+this.texture.getHeight()*0.5f*line);
 
@@ -550,7 +599,16 @@ public class ObjectNPC extends ObjectAbstract{
 	private void printSelfInfo(){
     	Gdx.app.log("NPC"+this.id+"_JOB ", this.jobQueue.size+"/"+this.cjob);
     	for(int i=0;i<this.jobQueue.size;i++){
-        	Gdx.app.log("NPC"+this.id+"_JOB:"+i, this.jobQueue.get(i).getClass()+"");
+    		if(this.jobQueue.get(i) instanceof JobConsume){
+    			JobConsume jc = (JobConsume)this.jobQueue.get(i);
+    			if(jc.consumedItem==null)
+    				Gdx.app.log("NPC"+this.id+"_JOB:"+i, "CONSUME NULL");
+    			else
+    				Gdx.app.log("NPC"+this.id+"_JOB:"+i, "CONSUME "+jc.consumedItem.getDisplayName()+""+this.jobQueue.get(i));
+    		}
+    		else{
+    			Gdx.app.log("NPC"+this.id+"_JOB:"+i, this.jobQueue.get(i).getClass()+""+this.jobQueue.get(i));
+    		}
     	}
     	for(int i=0;i<this.needQueue.size;i++){
     		Gdx.app.log("NPC"+this.id+"_NEED"+this.needQueue.get(i).id, this.needQueue.get(i).displayName+" : "+this.needQueue.get(i).currentLevel+"/"+this.needQueue.get(i).maxLevel+" InQueue : "+this.needQueue.get(i).handledInQueue+"niq : "+this.needQueue.get(i).neededItemQueue.size);
