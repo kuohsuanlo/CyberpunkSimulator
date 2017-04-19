@@ -14,6 +14,7 @@ import com.mygdx.item.ItemFood;
 import com.mygdx.job.*;
 
 import com.mygdx.need.*;
+import com.mygdx.util.ThreadNpc;
 
 public class ObjectNPC extends ObjectAbstract{
 	
@@ -21,7 +22,7 @@ public class ObjectNPC extends ObjectAbstract{
 	 * AI recalculating time
 	 */
 	private float currentTimeRC ;
-	private float maxTimeRC = 1.5f;
+	private float maxTimeRC = 1.0f;
 	private float speedBase = 60f;
 	private int expectedLifeInSec = 3600;
 	
@@ -166,8 +167,6 @@ public class ObjectNPC extends ObjectAbstract{
 		}
 		this.speed = speed_tmp*speedBase;
     	this.baseEnergyConsumption = baseEC_tmp*Gdx.graphics.getDeltaTime();
-    	
-
 	}
 
 	
@@ -217,7 +216,85 @@ public class ObjectNPC extends ObjectAbstract{
     	return this.lifeStatus<=0;
     }
     private void checkNeed(){
-    	this.game.getThreadNpc().addRequest(this);
+    	boolean useThread = true;
+    	if(useThread){
+	    	ThreadNpc tnpc = this.game.getThreadNpc();
+	    	if(tnpc!=null){
+	    		tnpc.addRequest(this);
+	    	}
+    	}
+    	else{
+    	
+    	for(int i=0;i<needQueue.size;i++){
+    		float c = needQueue.get(i).currentLevel;
+    		float m = needQueue.get(i).maxLevel;
+    		
+    		if(c<m) continue; 
+
+			if( needQueue.get(i) instanceof NeedFatigue) {
+				if (!needQueue.get(i).handledInQueue){
+					jobQueue.addFirst( new JobRest(this.gPosition,m,m-c,0,0,0f,0f));
+					needQueue.get(i).handledInQueue = true;
+				}
+			}
+			else if( needQueue.get(i) instanceof NeedHunger  ||  needQueue.get(i) instanceof NeedThirst) {
+				//no candidates item in queue, start to search
+				ItemAbstract onBodyItem ;
+				ItemAbstract onGroundItem ;
+				ItemAbstract goal;
+				
+				//NPC has no idea where the item is
+				if(needQueue.get(i).neededItemQueue.size==0 ){
+					//find it on NPC body
+					onBodyItem = this.findItemOnBody(needQueue.get(i));
+					
+					//found
+					if(onBodyItem!=null){
+						needQueue.get(i).neededItemQueue.addLast(onBodyItem);
+					}
+					//not found
+					else{
+						//find it on the ground
+						onGroundItem = this.findItemOnGround(needQueue.get(i));
+						
+						//found 
+						if(onGroundItem!=null){
+    	    				if (!needQueue.get(i).handledInQueue){
+    	    					goal = onGroundItem;
+    	    					jobQueue.addLast(new JobMove(goal.gPosition,-1, -1, 0, 0,0,0));
+    	    					JobConsume pendingCJ = new JobConsume(goal.gPosition,m,m-c,0,0,0f,0f,null);
+    	    					
+    	    					jobQueue.addLast(new JobTake(goal.gPosition,-1,-1,goal.decreasedNeed_id,0,0f,0f,goal,pendingCJ));
+    	        				jobQueue.addLast(pendingCJ);
+    	        				needQueue.get(i).handledInQueue = true;
+    	    				}
+						}
+						//not found, screw the NPC. Ignore the need.
+						else{
+							//no item to solve the need. Let's rest (ignore) and see.
+							if (!needQueue.get(i).handledInQueue){
+								
+		    				}
+						}
+					}
+				}
+				//NPC know it's on its body
+				else{
+					onBodyItem = needQueue.get(i).neededItemQueue.first();
+    				//just on NPC body
+    				if (!needQueue.get(i).handledInQueue){
+    					goal = needQueue.get(i).neededItemQueue.first();
+    					goal.gPosition = this.gPosition;
+        				jobQueue.addFirst( new JobConsume(goal.gPosition,m,m-c,goal.decreasedNeed_id,0,0f,0f,goal));
+        				needQueue.get(i).handledInQueue = true;
+    				}
+				}
+    		
+			}
+		}
+    	
+    	}
+    	
     }
     public ItemAbstract findItemOnBody(NeedAbstract na){
     	Queue<ItemAbstract> q = this.itemQueue;

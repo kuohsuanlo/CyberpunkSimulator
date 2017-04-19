@@ -43,9 +43,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Queue<ObjectNPC> npc_queue;
 	private Queue<ItemAbstract> item_queue;
 	
+	private Queue<ThreadNpc> threadnpc_pool;
+	private static final int threadnpc_pool_number=4;
+
 	private Random random = new Random();
-	private ThreadNpc[] threadnpc_pool;
-	private static final int threadnpc_pool_number=10;
 	
 	@Override
 	public void create () {
@@ -77,7 +78,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		this.drawNpcFont();
 		
 		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_queue.size+" / FPS : "+Gdx.graphics.getFramesPerSecond());
-		
+		Gdx.app.log("FPS",Gdx.graphics.getFramesPerSecond()+"");
 		batch.end();
 	}
 	
@@ -91,10 +92,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(inputProcessor);
 	}
 	private void initThreadPool(){
-		this.threadnpc_pool= new ThreadNpc[threadnpc_pool_number];
+		this.threadnpc_pool= new Queue<ThreadNpc>();
 		for(int i=0;i<threadnpc_pool_number;i++){
-			this.threadnpc_pool[i] = new ThreadNpc();
-			this.threadnpc_pool[i].start();
+			ThreadNpc Ttmp = new ThreadNpc();
+			this.threadnpc_pool.addLast(Ttmp);
+			Ttmp.start();
 		}
 	}
 	
@@ -204,21 +206,21 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 	}
 	public ThreadNpc getThreadNpc(){
-		return this.threadnpc_pool[random.nextInt(this.threadnpc_pool_number)];
+		return this.threadnpc_pool.get(random.nextInt(threadnpc_pool_number));
 		//return getLeastBusyThread();
 	}
 	public ThreadNpc getLeastBusyThread(){
 		int min_idx=-1;
 		int min_number=ThreadNpc.requestQueueMax+1;
-		for(int i=0;i<threadnpc_pool_number;i++){
-			if(this.threadnpc_pool[i].getCurrentRequestNumber()<min_number){
+		for(int i=0;i<threadnpc_pool.size;i++){
+			if(threadnpc_pool.get(i).getCurrentRequestNumber()<min_number){
 				min_idx = i;
-				min_number = this.threadnpc_pool[i].getCurrentRequestNumber();
+				min_number = threadnpc_pool.get(i).getCurrentRequestNumber();
 			}
 		}
 		if(min_idx==-1) return null;
 		else{
-			return this.threadnpc_pool[min_idx];
+			return this.threadnpc_pool.get(min_idx);
 		}
 	}
 	public Vector2 s2c(int x, int y){

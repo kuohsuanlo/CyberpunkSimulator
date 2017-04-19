@@ -1,5 +1,6 @@
 package com.mygdx.util;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.game.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
@@ -20,8 +21,10 @@ public class ThreadNpc extends Thread{
 		npcr_queue = new Queue<ObjectRequest>();
 	}
 	
-	public void processNeedToJob(){
-		if(this.npcr_queue.size==0) return;
+	public void processCheckNeed(){
+		if(this.npcr_queue.size==0) {
+			return;
+		}
 		
 		ObjectRequest oq = this.npcr_queue.removeFirst();
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
@@ -96,15 +99,28 @@ public class ThreadNpc extends Thread{
 	
 
 	public boolean addRequest(ObjectNPC onpc){
-		if(this.npcr_queue.size>=requestQueueMax) return false;
-		this.npcr_queue.addLast(new ObjectRequest(onpc));
-		return true;
+		if(this.npcr_queue.size>=requestQueueMax){
+			return false;
+		}
+		else{
+			this.npcr_queue.addLast(new ObjectRequest(onpc));
+			return true;
+		}
 	}
 	public int getCurrentRequestNumber(){
 		return this.npcr_queue.size;
 	}
 	public void run() { // override Thread's run()
-		processNeedToJob();
+		while (!Thread.currentThread().isInterrupted()) {
+		    processCheckNeed();
+		    try {
+				sleep(20);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
     }
 }
 
