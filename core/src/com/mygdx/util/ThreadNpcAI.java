@@ -25,7 +25,6 @@ public class ThreadNpcAI extends Thread{
 	private void processIncreaseNeed(ObjectRequest oq){
 
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
-		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
 		if(oq.npc.getSpecies()==ObjectNPC.HUMAN){
         	for(int i=0;i<needQueue.size;i++){
         		needQueue.get(i).tickLevel = oq.npc.getBaseEnergyConsumption();
@@ -36,7 +35,6 @@ public class ThreadNpcAI extends Thread{
 	private void processBodyCycle(ObjectRequest oq){
 
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
-		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
     	boolean allNeedPassed= true;
     	for(int i=0;i<needQueue.size;i++){
     		if(needQueue.get(i).currentLevel>=needQueue.get(i).maxLevel){

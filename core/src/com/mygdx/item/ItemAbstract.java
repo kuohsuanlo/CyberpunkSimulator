@@ -1,6 +1,5 @@
 package com.mygdx.item;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -8,10 +7,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.ObjectAbstract;
 import com.mygdx.game.ObjectNPC;
-import com.mygdx.job.JobAbstract;
-import com.mygdx.job.JobMove;
-import com.mygdx.job.JobRest;
-import com.mygdx.need.NeedAbstract;
 
 public class ItemAbstract extends ObjectAbstract {
 	private float texture_default_size = 16;

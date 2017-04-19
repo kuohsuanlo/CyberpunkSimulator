@@ -10,7 +10,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.ItemAbstract;
-import com.mygdx.item.ItemFood;
 import com.mygdx.job.*;
 
 import com.mygdx.need.*;
@@ -35,7 +34,7 @@ public class ObjectNPC extends ObjectAbstract{
 	/*
 	 * Body Parts : the parts, which are replaceable for the NPCs themselves. 
 	 */
-	private static int bpNumber = 6;
+	private int bpNumber = 6;
 	private ObjectBodyPart[] bpTraits;
 	
 	/*
@@ -90,9 +89,9 @@ public class ObjectNPC extends ObjectAbstract{
     	inMap = im;
     	
     	//initializing in-game data
-    	initNeed();
     	initBodyPartTraits();
     	initItem();
+    	initNeed();
     	initPersonalAbilities();
     	
     }
@@ -158,10 +157,32 @@ public class ObjectNPC extends ObjectAbstract{
     	
 	}
     private void initNeed(){
-    	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,0,0,100,null,null) );
-    	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,0,100,100,null,null) );
-    	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0,100,100,null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,0,random.nextInt(100),getNeedMax(NeedAbstract.NEED_FATIGUE_ID),null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,0,random.nextInt(100),getNeedMax(NeedAbstract.NEED_HUNGER_ID),null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0,random.nextInt(100),getNeedMax(NeedAbstract.NEED_THIRST_ID),null,null) );
     }
+	private float getNeedMax(int type){
+		float base_tmp=0;
+		switch(type){
+			case(NeedAbstract.NEED_FATIGUE_ID):
+				for(int i=0;i<getBpNumber();i++){
+					base_tmp+=this.getBpTraits()[i].traits.vit; //0-6
+				}
+				return base_tmp*100f*(0.5f+0.5f*random.nextFloat());
+			case(NeedAbstract.NEED_HUNGER_ID):
+				for(int i=0;i<getBpNumber();i++){
+					base_tmp+=this.getBpTraits()[i].traits.vit; //0-6
+				}
+				return base_tmp*100f*(0.5f+0.5f*random.nextFloat());
+			case(NeedAbstract.NEED_THIRST_ID):
+				for(int i=0;i<getBpNumber();i++){
+					base_tmp+=this.getBpTraits()[i].traits.vit; //0-6
+				}
+				return base_tmp*100f*(0.5f+0.5f*random.nextFloat());
+			default:
+				return 300;
+		}
+	}
     private void increaseNeed(ThreadNpcAI tnpc){
     	if(tnpc!=null){
     		tnpc.addRequest(this,1);
@@ -287,7 +308,6 @@ public class ObjectNPC extends ObjectAbstract{
 
     }
     
-    
     private ItemAbstract findItemForNeed(Queue<ItemAbstract> q, int NEED_ID){
     	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
     	/*
@@ -303,7 +323,7 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     	return null;
     }
-    private void getItem(ItemAbstract ia1){
+    private void obtainItem(ItemAbstract ia1){
     	for(int i=0;i<itemQueue.size;i++){
     		if(itemQueue.get(i).getId() ==  ia1.getId()){
     			//stackable
@@ -314,6 +334,22 @@ public class ObjectNPC extends ObjectAbstract{
     		}
     	}
     	this.itemQueue.addLast(ia1);
+    }
+
+    private void loseItem(ItemAbstract ia1){
+    	for(int i=0;i<itemQueue.size;i++){
+    		if(itemQueue.get(i).getId() ==  ia1.getId()){
+    			//stackable
+    			if( itemQueue.get(i).compareItemAbstract(ia1) ){
+    				itemQueue.get(i).setStack_number(itemQueue.get(i).getStack_number() - ia1.getStack_number());
+
+    		    	if(itemQueue.get(i).getStack_number()<=0){
+    		    		itemQueue.removeIndex(i);
+    		    	}
+    				return;
+    			}
+    		}
+    	}
     }
     public boolean checkJobDone(JobAbstract ja){
 
@@ -371,7 +407,7 @@ public class ObjectNPC extends ObjectAbstract{
         		}
         		
     			if(IDtmp!=null){
-        			this.getItem(IDtmp);
+        			this.obtainItem(IDtmp);
     			}
     			Itmp.setStack_number(Itmp.getStack_number() - 1);
     		}
@@ -436,7 +472,7 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     	
 		ItemAbstract tkItem = tj.takenItem.getTaken(this.determineTakingItemNumber()) ;
-    	this.getItem(tkItem);
+    	this.obtainItem(tkItem);
     	
     	//Filling information for the taken item
     	if(tj.nextPendingJob!=null  && tj.nextPendingJob instanceof JobConsume){
@@ -523,12 +559,12 @@ public class ObjectNPC extends ObjectAbstract{
     	Gdx.app.log("NPC"+this.id+"_BASE ", this.getBaseEnergyConsumption()+"");
 	}
 
-	public static int getBpNumber() {
+	public int getBpNumber() {
 		return bpNumber;
 	}
 
-	public static void setBpNumber(int bpNumber) {
-		ObjectNPC.bpNumber = bpNumber;
+	public void setBpNumber(int bpNumber) {
+		this.bpNumber = bpNumber;
 	}
 
 	public ObjectBodyPart[] getBpTraits() {

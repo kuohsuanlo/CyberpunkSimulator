@@ -1,15 +1,14 @@
 package com.mygdx.need;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.*;
 import com.mygdx.job.*;
 
 public abstract class NeedAbstract {
-	public static int NEED_ABSTRACT_ID = -1;
-	public static int NEED_FATIGUE_ID = 0;
-	public static int NEED_HUNGER_ID = 1;
-	public static int NEED_THIRST_ID = 2;
+	public static final int NEED_ABSTRACT_ID = -1;
+	public static final int NEED_FATIGUE_ID = 0;
+	public static final int NEED_HUNGER_ID = 1;
+	public static final int NEED_THIRST_ID = 2;
 	public int id;
 	public String displayName;
 	public float searchRadius;

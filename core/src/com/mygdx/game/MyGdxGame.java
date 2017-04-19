@@ -10,7 +10,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.ItemAbstract;
@@ -31,7 +30,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 1000;
+	public static final int npc_number = 50;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
@@ -44,7 +43,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Queue<ItemAbstract> item_queue;
 	
 	private Queue<ThreadNpcAI> threadnpc_pool;
-	public static final int threadnpc_pool_number=1;
+	public static final int threadnpc_pool_number=2;
 
 	private Random random = new Random();
 	

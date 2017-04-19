@@ -1,10 +1,7 @@
 package com.mygdx.item;
 
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.ObjectNPC;
-import com.mygdx.need.NeedAbstract;
 
 public class ItemFood extends ItemAbstract{
 

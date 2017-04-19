@@ -1,12 +1,10 @@
 package com.mygdx.game;
 
-import java.util.Random;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.ItemAbstract;
-import com.mygdx.job.*;
+
 
 public class ObjectMap {
 	public Queue<ItemAbstract> item_ground;

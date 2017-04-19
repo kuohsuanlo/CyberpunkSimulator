@@ -1,8 +1,6 @@
 package com.mygdx.job;
 
 import com.badlogic.gdx.math.Vector2;
-import com.mygdx.need.NeedAbstract;
-import com.mygdx.need.NeedFatigue;
 
 public class JobRest extends JobAbstract{
 
