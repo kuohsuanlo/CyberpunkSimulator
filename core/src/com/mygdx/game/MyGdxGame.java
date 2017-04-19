@@ -18,7 +18,7 @@ import com.mygdx.item.ItemFood;
 import com.mygdx.need.NeedAbstract;
 import com.mygdx.need.NeedHunger;
 import com.mygdx.need.NeedThirst;
-import com.mygdx.util.ThreadNpc;
+import com.mygdx.util.ThreadNpcAI;
 
 
 
@@ -43,8 +43,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Queue<ObjectNPC> npc_queue;
 	private Queue<ItemAbstract> item_queue;
 	
-	private Queue<ThreadNpc> threadnpc_pool;
-	private static final int threadnpc_pool_number=1;
+	private Queue<ThreadNpcAI> threadnpc_pool;
+	public static final int threadnpc_pool_number=1;
 
 	private Random random = new Random();
 	
@@ -78,7 +78,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		this.drawNpcFont();
 		
 		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_queue.size+" / FPS : "+Gdx.graphics.getFramesPerSecond());
-		Gdx.app.log("FPS",Gdx.graphics.getFramesPerSecond()+"");
+		//Gdx.app.log("FPS",Gdx.graphics.getFramesPerSecond()+"");
 		batch.end();
 	}
 	
@@ -92,9 +92,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(inputProcessor);
 	}
 	private void initThreadPool(){
-		this.threadnpc_pool= new Queue<ThreadNpc>();
+		this.threadnpc_pool= new Queue<ThreadNpcAI>();
 		for(int i=0;i<threadnpc_pool_number;i++){
-			ThreadNpc Ttmp = new ThreadNpc();
+			ThreadNpcAI Ttmp = new ThreadNpcAI();
 			this.threadnpc_pool.addLast(Ttmp);
 			Ttmp.start();
 		}
@@ -204,13 +204,13 @@ public class MyGdxGame extends ApplicationAdapter {
 			batch.draw(map.tr_texture[this.map_buffer[i]],this.current_block_size*(i/this.map_render_size_x),current_block_size*(i%this.map_render_size_x));
 		}
 	}
-	public ThreadNpc getThreadNpc(){
+	public ThreadNpcAI getThreadNpc(){
 		return this.threadnpc_pool.get(random.nextInt(threadnpc_pool_number));
 		//return getLeastBusyThread();
 	}
-	public ThreadNpc getLeastBusyThread(){
+	public ThreadNpcAI getLeastBusyThread(){
 		int min_idx=-1;
-		int min_number=ThreadNpc.requestQueueMax+1;
+		int min_number=ThreadNpcAI.requestQueueMax+1;
 		for(int i=0;i<threadnpc_pool.size;i++){
 			if(threadnpc_pool.get(i).getCurrentRequestNumber()<min_number){
 				min_idx = i;

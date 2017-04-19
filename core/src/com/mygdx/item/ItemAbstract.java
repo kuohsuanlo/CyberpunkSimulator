@@ -14,18 +14,18 @@ import com.mygdx.job.JobRest;
 import com.mygdx.need.NeedAbstract;
 
 public class ItemAbstract extends ObjectAbstract {
-	public float texture_default_size = 16;
-	public int id;
-	public int ageTick;
-	public int maxAgeTick;
-	public float price;
-	public String name;
-	public int stack_number ;
-	public ObjectNPC owner;
-	public int decreasedNeed_id;
-	public int increasedNeed_id;
-	public float decreasedNeed_amount;
-	public float increasedNeed_amount;
+	private float texture_default_size = 16;
+	private int id;
+	private int ageTick;
+	private int maxAgeTick;
+	private float price;
+	private String name;
+	private int stack_number ;
+	private ObjectNPC owner;
+	private int decreasedNeed_id;
+	private int increasedNeed_id;
+	private float decreasedNeed_amount;
+	private float increasedNeed_amount;
 	
 	private ItemAbstract destroyedItem;
 	
@@ -33,15 +33,15 @@ public class ItemAbstract extends ObjectAbstract {
 
 	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,float decreasedNeed_amount, float increasedNeed_amount, ObjectNPC owner, ItemAbstract destroyedItem) {
 		super();
-		this.id = id;
+		this.setId(id);
 		this.gPosition = gp;
 		this.price = price;
 		this.name = name;
-		this.stack_number = stack_number;
-		this.decreasedNeed_id = decreasedNeed_id;
-		this.increasedNeed_id = increasedNeed_id;
-		this.decreasedNeed_amount = decreasedNeed_amount;
-		this.increasedNeed_amount = increasedNeed_amount;
+		this.setStack_number(stack_number);
+		this.setDecreasedNeed_id(decreasedNeed_id);
+		this.setIncreasedNeed_id(increasedNeed_id);
+		this.setDecreasedNeed_amount(decreasedNeed_amount);
+		this.setIncreasedNeed_amount(increasedNeed_amount);
 		this.owner = owner;
 		this.maxAgeTick = 100;
 		this.destroyedItem = destroyedItem;
@@ -56,15 +56,15 @@ public class ItemAbstract extends ObjectAbstract {
 	}
 	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,float decreasedNeed_amount, float increasedNeed_amount, ObjectNPC owner) {
 		super();
-		this.id = id;
+		this.setId(id);
 		this.gPosition = gp;
 		this.price = price;
 		this.name = name;
-		this.stack_number = stack_number;
-		this.decreasedNeed_id = decreasedNeed_id;
-		this.increasedNeed_id = increasedNeed_id;
-		this.decreasedNeed_amount = decreasedNeed_amount;
-		this.increasedNeed_amount = increasedNeed_amount;
+		this.setStack_number(stack_number);
+		this.setDecreasedNeed_id(decreasedNeed_id);
+		this.setIncreasedNeed_id(increasedNeed_id);
+		this.setDecreasedNeed_amount(decreasedNeed_amount);
+		this.setIncreasedNeed_amount(increasedNeed_amount);
 		this.owner = owner;
 		this.maxAgeTick = 100;
 		this.destroyedItem = null;
@@ -76,27 +76,27 @@ public class ItemAbstract extends ObjectAbstract {
         yOffset = this.texture.getHeight()*0.5f;
 	}
 	public String getDisplayName(){
-		return this.name+" x "+this.stack_number;
+		return this.name+" x "+this.getStack_number();
 	}
 	public ItemAbstract getTaken(int number){
-		int tkNumber = this.stack_number;
+		int tkNumber = this.getStack_number();
 		if(tkNumber>=number){
 			tkNumber = number;
 		}
-		if(this.stack_number>=tkNumber){
-			this.stack_number-=tkNumber;
-			return new ItemAbstract(this.id,this.gPosition,this.price,this.name,tkNumber,this.decreasedNeed_id,this.increasedNeed_id,this.decreasedNeed_amount,this.increasedNeed_amount,null,this.destroyedItem);
+		if(this.getStack_number()>=tkNumber){
+			this.setStack_number(this.getStack_number() - tkNumber);
+			return new ItemAbstract(this.getId(),this.gPosition,this.price,this.name,tkNumber,this.getDecreasedNeed_id(),this.getIncreasedNeed_id(),this.getDecreasedNeed_amount(),this.getIncreasedNeed_amount(),null,this.destroyedItem);
 
 		}
 		return null;
 	}
 	public boolean compareItemAbstract(ItemAbstract ia){
-		return  this.id==ia.id  && 
+		return  this.getId()==ia.getId()  && 
 				this.name==ia.name  &&  
-				this.decreasedNeed_id == ia.decreasedNeed_id  &&
-				this.increasedNeed_id == ia.increasedNeed_id  &&
-				this.decreasedNeed_amount == ia.decreasedNeed_amount  &&
-				this.increasedNeed_amount == ia.increasedNeed_amount  &&
+				this.getDecreasedNeed_id() == ia.getDecreasedNeed_id()  &&
+				this.getIncreasedNeed_id() == ia.getIncreasedNeed_id()  &&
+				this.getDecreasedNeed_amount() == ia.getDecreasedNeed_amount()  &&
+				this.getIncreasedNeed_amount() == ia.getIncreasedNeed_amount()  &&
 				this.maxAgeTick == ia.maxAgeTick  &&  
 				this.owner  == ia.owner;
 				
@@ -106,18 +106,18 @@ public class ItemAbstract extends ObjectAbstract {
 		//ageTick+=1;
 	}
 	public boolean itemNeedDestroy(){
-		return ageTick>maxAgeTick  ||  stack_number<=0;
+		return ageTick>maxAgeTick  ||  getStack_number()<=0;
 	}
 	public boolean hasDestroyedItem(){
 		return this.destroyedItem!=null;
 	}
 	public ItemAbstract getOneDestroyedItem(){
-		return new ItemAbstract(this.destroyedItem.id,this.destroyedItem.gPosition,this.destroyedItem.price,this.destroyedItem.name,1,this.destroyedItem.decreasedNeed_id,this.destroyedItem.increasedNeed_id,this.destroyedItem.decreasedNeed_amount,this.destroyedItem.increasedNeed_amount,this.destroyedItem.owner,this.destroyedItem.destroyedItem);
+		return new ItemAbstract(this.destroyedItem.getId(),this.destroyedItem.gPosition,this.destroyedItem.price,this.destroyedItem.name,1,this.destroyedItem.getDecreasedNeed_id(),this.destroyedItem.getIncreasedNeed_id(),this.destroyedItem.getDecreasedNeed_amount(),this.destroyedItem.getIncreasedNeed_amount(),this.destroyedItem.owner,this.destroyedItem.destroyedItem);
 
 	}
 	public void renderSelf(SpriteBatch batch) {
 		if(texture==null){
-			texture = new Texture("item/"+id+".png");
+			texture = new Texture("item/"+getId()+".png");
 	        xOffset = this.texture.getWidth()*0.5f;
 	        yOffset = this.texture.getHeight()*0.5f;
 		}
@@ -134,6 +134,42 @@ public class ItemAbstract extends ObjectAbstract {
 		if(nearCursor()){
 			font.draw(batch, this.getDisplayName(), this.sPosition.x, this.sPosition.y+2*this.texture.getHeight());
 		}
+	}
+	public int getDecreasedNeed_id() {
+		return decreasedNeed_id;
+	}
+	public void setDecreasedNeed_id(int decreasedNeed_id) {
+		this.decreasedNeed_id = decreasedNeed_id;
+	}
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public int getStack_number() {
+		return stack_number;
+	}
+	public void setStack_number(int stack_number) {
+		this.stack_number = stack_number;
+	}
+	public float getDecreasedNeed_amount() {
+		return decreasedNeed_amount;
+	}
+	public void setDecreasedNeed_amount(float decreasedNeed_amount) {
+		this.decreasedNeed_amount = decreasedNeed_amount;
+	}
+	public float getIncreasedNeed_amount() {
+		return increasedNeed_amount;
+	}
+	public void setIncreasedNeed_amount(float increasedNeed_amount) {
+		this.increasedNeed_amount = increasedNeed_amount;
+	}
+	public int getIncreasedNeed_id() {
+		return increasedNeed_id;
+	}
+	public void setIncreasedNeed_id(int increasedNeed_id) {
+		this.increasedNeed_id = increasedNeed_id;
 	}
 
 }

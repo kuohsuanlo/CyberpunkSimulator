@@ -3,6 +3,7 @@ package com.mygdx.util;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
+import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.job.JobAbstract;
@@ -15,19 +16,19 @@ import com.mygdx.need.NeedFatigue;
 import com.mygdx.need.NeedHunger;
 import com.mygdx.need.NeedThirst;
 
-public class ThreadNpc extends Thread{
-	public static final int requestQueueMax = 5000;
+public class ThreadNpcAI extends Thread{
+	public static final int requestQueueMax = MyGdxGame.npc_number*20/MyGdxGame.threadnpc_pool_number;
 	private Queue<ObjectRequest> npcr_queue;
-	public ThreadNpc(){
+	public ThreadNpcAI(){
 		npcr_queue = new Queue<ObjectRequest>();
 	}
 	private void processIncreaseNeed(ObjectRequest oq){
 
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
 		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
-		if(oq.npc.species==ObjectNPC.HUMAN){
+		if(oq.npc.getSpecies()==ObjectNPC.HUMAN){
         	for(int i=0;i<needQueue.size;i++){
-        		needQueue.get(i).tickLevel = oq.npc.baseEnergyConsumption;
+        		needQueue.get(i).tickLevel = oq.npc.getBaseEnergyConsumption();
         		needQueue.get(i).tickNeed();
         	}
     	}
@@ -39,12 +40,12 @@ public class ThreadNpc extends Thread{
     	boolean allNeedPassed= true;
     	for(int i=0;i<needQueue.size;i++){
     		if(needQueue.get(i).currentLevel>=needQueue.get(i).maxLevel){
-    			oq.npc.damageBody(oq.npc.baseEnergyConsumption);
+    			oq.npc.damageBody(oq.npc.getBaseEnergyConsumption());
     			allNeedPassed = false;
     		}
     	}
     	if(allNeedPassed){
-    		oq.npc.recoverBody(oq.npc.baseEnergyConsumption*0.5f);
+    		oq.npc.recoverBody(oq.npc.getBaseEnergyConsumption()*0.5f);
     	}
 	}
 	private void processCheckNeed(ObjectRequest oq){
@@ -91,7 +92,7 @@ public class ThreadNpc extends Thread{
     	    					jobQueue.addLast(new JobMove(goal.gPosition,-1, -1, 0, 0,0,0));
     	    					JobConsume pendingCJ = new JobConsume(goal.gPosition,m,m-c,0,0,0f,0f,null);
     	    					
-    	    					jobQueue.addLast(new JobTake(goal.gPosition,-1,-1,goal.decreasedNeed_id,0,0f,0f,goal,pendingCJ));
+    	    					jobQueue.addLast(new JobTake(goal.gPosition,-1,-1,goal.getDecreasedNeed_id(),0,0f,0f,goal,pendingCJ));
     	        				jobQueue.addLast(pendingCJ);
     	        				needQueue.get(i).handledInQueue = true;
     	    				}
@@ -112,7 +113,7 @@ public class ThreadNpc extends Thread{
     				if (!needQueue.get(i).handledInQueue){
     					goal = needQueue.get(i).neededItemQueue.first();
     					goal.gPosition = oq.npc.gPosition;
-        				jobQueue.addFirst( new JobConsume(goal.gPosition,m,m-c,goal.decreasedNeed_id,0,0f,0f,goal));
+        				jobQueue.addFirst( new JobConsume(goal.gPosition,m,m-c,goal.getDecreasedNeed_id(),0,0f,0f,goal));
         				needQueue.get(i).handledInQueue = true;
     				}
 				}
@@ -123,18 +124,18 @@ public class ThreadNpc extends Thread{
 
 		float speed_tmp=0;
 		float baseEC_tmp=0;
-		for(int i=0;i<oq.npc.bpNumber;i++){
-			speed_tmp+=oq.npc.bpTraits[i].traits.dex;
-			baseEC_tmp+=(oq.npc.bpTraits[i].traits.str+oq.npc.bpTraits[i].traits.vit);
+		for(int i=0;i<oq.npc.getBpNumber();i++){
+			speed_tmp+=oq.npc.getBpTraits()[i].traits.dex;
+			baseEC_tmp+=(oq.npc.getBpTraits()[i].traits.str+oq.npc.getBpTraits()[i].traits.vit);
 		}
-		oq.npc.speed = speed_tmp*oq.npc.speedBase;
-		oq.npc.baseEnergyConsumption = baseEC_tmp*Gdx.graphics.getDeltaTime();
+		oq.npc.setSpeed(speed_tmp*oq.npc.getSpeedBase());
+		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime());
 	}
 	private void processDecideJob(ObjectRequest oq){
 		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
     	if(jobQueue.size==0){
-    		float x_d = oq.npc.random.nextFloat()*Gdx.graphics.getWidth();
-    		float y_d = oq.npc.random.nextFloat()*Gdx.graphics.getHeight();
+    		float x_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getWidth();
+    		float y_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getHeight();
         	jobQueue.addLast(new JobMove(new Vector2(x_d,y_d),-1, -1, 0, 0,0,0));
     	}
 	}
