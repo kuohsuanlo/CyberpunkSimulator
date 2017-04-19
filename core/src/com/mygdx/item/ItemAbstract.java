@@ -14,6 +14,7 @@ import com.mygdx.job.JobRest;
 import com.mygdx.need.NeedAbstract;
 
 public class ItemAbstract extends ObjectAbstract {
+	public float texture_default_size = 16;
 	public int id;
 	public int ageTick;
 	public int maxAgeTick;
@@ -44,12 +45,14 @@ public class ItemAbstract extends ObjectAbstract {
 		this.owner = owner;
 		this.maxAgeTick = 100;
 		this.destroyedItem = destroyedItem;
+		 
 		
-		this.font = new BitmapFont(); 
+        xOffset = this.texture_default_size*0.5f;
+        yOffset = this.texture_default_size*0.5f;
 		
-    	texture = new Texture("item/"+id+".png");
-        xOffset = this.texture.getWidth()*0.5f;
-        yOffset = this.texture.getHeight()*0.5f;
+    	//texture = new Texture("item/"+id+".png");
+        //xOffset = this.texture.getWidth()*0.5f;
+        //yOffset = this.texture.getHeight()*0.5f;
 	}
 	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,float decreasedNeed_amount, float increasedNeed_amount, ObjectNPC owner) {
 		super();
@@ -99,7 +102,7 @@ public class ItemAbstract extends ObjectAbstract {
 				
 	}
 	public void itemTimePass(){
-		this.rotation=(this.rotation+3)%360;
+		this.rotation=(this.rotation+5)%360;
 		//ageTick+=1;
 	}
 	public boolean itemNeedDestroy(){
@@ -113,6 +116,11 @@ public class ItemAbstract extends ObjectAbstract {
 
 	}
 	public void renderSelf(SpriteBatch batch) {
+		if(texture==null){
+			texture = new Texture("item/"+id+".png");
+	        xOffset = this.texture.getWidth()*0.5f;
+	        yOffset = this.texture.getHeight()*0.5f;
+		}
     	batch.draw(new TextureRegion(this.texture), 
     			this.sPosition.x-this.xOffset, this.gPosition.y-this.yOffset, 
     			this.texture.getWidth()/2, this.texture.getHeight()/2, 
@@ -120,6 +128,9 @@ public class ItemAbstract extends ObjectAbstract {
 
 	}
 	public void renderFont(SpriteBatch batch) {	
+		if(font ==null){
+			this.font = new BitmapFont();
+		}
 		if(nearCursor()){
 			font.draw(batch, this.getDisplayName(), this.sPosition.x, this.sPosition.y+2*this.texture.getHeight());
 		}

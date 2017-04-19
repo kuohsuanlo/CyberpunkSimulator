@@ -1,6 +1,7 @@
 package com.mygdx.util;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.game.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
@@ -15,18 +16,40 @@ import com.mygdx.need.NeedHunger;
 import com.mygdx.need.NeedThirst;
 
 public class ThreadNpc extends Thread{
-	public static final int requestQueueMax = 500;
+	public static final int requestQueueMax = 5000;
 	private Queue<ObjectRequest> npcr_queue;
 	public ThreadNpc(){
 		npcr_queue = new Queue<ObjectRequest>();
 	}
-	
-	public void processCheckNeed(){
-		if(this.npcr_queue.size==0) {
-			return;
-		}
+	private void processIncreaseNeed(ObjectRequest oq){
+
+		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
+		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
+		if(oq.npc.species==ObjectNPC.HUMAN){
+        	for(int i=0;i<needQueue.size;i++){
+        		needQueue.get(i).tickLevel = oq.npc.baseEnergyConsumption;
+        		needQueue.get(i).tickNeed();
+        	}
+    	}
+	}
+	private void processBodyCycle(ObjectRequest oq){
+
+		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
+		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
+    	boolean allNeedPassed= true;
+    	for(int i=0;i<needQueue.size;i++){
+    		if(needQueue.get(i).currentLevel>=needQueue.get(i).maxLevel){
+    			oq.npc.damageBody(oq.npc.baseEnergyConsumption);
+    			allNeedPassed = false;
+    		}
+    	}
+    	if(allNeedPassed){
+    		oq.npc.recoverBody(oq.npc.baseEnergyConsumption*0.5f);
+    	}
+	}
+	private void processCheckNeed(ObjectRequest oq){
+
 		
-		ObjectRequest oq = this.npcr_queue.removeFirst();
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
 		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
 		for(int i=0;i<needQueue.size;i++){
@@ -96,14 +119,32 @@ public class ThreadNpc extends Thread{
     		}
     	}
 	}
-	
+	private void processUpdatePersonalAbilities(ObjectRequest oq){
 
-	public boolean addRequest(ObjectNPC onpc){
+		float speed_tmp=0;
+		float baseEC_tmp=0;
+		for(int i=0;i<oq.npc.bpNumber;i++){
+			speed_tmp+=oq.npc.bpTraits[i].traits.dex;
+			baseEC_tmp+=(oq.npc.bpTraits[i].traits.str+oq.npc.bpTraits[i].traits.vit);
+		}
+		oq.npc.speed = speed_tmp*oq.npc.speedBase;
+		oq.npc.baseEnergyConsumption = baseEC_tmp*Gdx.graphics.getDeltaTime();
+	}
+	private void processDecideJob(ObjectRequest oq){
+		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
+    	if(jobQueue.size==0){
+    		float x_d = oq.npc.random.nextFloat()*Gdx.graphics.getWidth();
+    		float y_d = oq.npc.random.nextFloat()*Gdx.graphics.getHeight();
+        	jobQueue.addLast(new JobMove(new Vector2(x_d,y_d),-1, -1, 0, 0,0,0));
+    	}
+	}
+	public boolean addRequest(ObjectNPC onpc, int type){
 		if(this.npcr_queue.size>=requestQueueMax){
+			Gdx.app.log("ADDR",""+type);
 			return false;
 		}
 		else{
-			this.npcr_queue.addLast(new ObjectRequest(onpc));
+			this.npcr_queue.addLast(new ObjectRequest(onpc,type));
 			return true;
 		}
 	}
@@ -112,21 +153,41 @@ public class ThreadNpc extends Thread{
 	}
 	public void run() { // override Thread's run()
 		while (!Thread.currentThread().isInterrupted()) {
-		    processCheckNeed();
-		    try {
-				sleep(20);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if(this.npcr_queue.size!=0) {
+				ObjectRequest oq = this.npcr_queue.removeFirst();
+				if(oq!=null){
+					switch(oq.requestType){
+					case 1:
+						processIncreaseNeed(oq);
+						break;
+					case 2:
+						processBodyCycle(oq);
+						break;
+					case 3:
+						processCheckNeed(oq);
+						break;
+					case 4:
+						processUpdatePersonalAbilities(oq);
+						break;
+					case 5:
+						processDecideJob(oq);
+						break;
+					default:
+						break;
+					}
+				}
 			}
 		}
+		
 		
     }
 }
 
 class ObjectRequest{
 	public ObjectNPC npc;
-	public ObjectRequest(ObjectNPC npc){
+	public int requestType;
+	public ObjectRequest(ObjectNPC npc, int requestType){
+		this.requestType = requestType;
 		this.npc = npc;
 	}
 	

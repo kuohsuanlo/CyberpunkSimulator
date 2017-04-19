@@ -23,28 +23,28 @@ public class ObjectNPC extends ObjectAbstract{
 	 */
 	private float currentTimeRC ;
 	private float maxTimeRC = 1.0f;
-	private float speedBase = 60f;
+	public float speedBase = 60f;
 	private int expectedLifeInSec = 3600;
 	
 	/*
 	 * Species : Probably human all the time, sometimes cats :p 
 	 */
 	public static final int HUMAN = 0;
-	private int species;
+	public int species;
 	
 	/*
 	 * Body Parts : the parts, which are replaceable for the NPCs themselves. 
 	 */
-	private static int bpNumber = 6;
-	private ObjectBodyPart[] bpTraits;
+	public static int bpNumber = 6;
+	public ObjectBodyPart[] bpTraits;
 	
 	/*
 	 * Personal Ability : based on body part traits, chips, and other add-ons to the body parts.
 	 */
 	private float lifeStatus;
 	private float maxLifeStatus;
-    private float speed;
-    private float baseEnergyConsumption;
+	public float speed;
+    public float baseEnergyConsumption;
     
     /*
      * Queues : to simulate the human behavior by creating the needs and daily jobs, or jobs driven by needs
@@ -52,14 +52,14 @@ public class ObjectNPC extends ObjectAbstract{
     private Queue<ItemAbstract> itemQueue;
     private Queue<NeedAbstract> needQueue;
     private Queue<JobAbstract> jobQueue;
-    private JobAbstract cjob;
+    public JobAbstract cjob;
    
     /*
      * Font : for npc to print their own dialog bubbles, current goal, etc.
      */
     private BitmapFont font;
 	
-    private Random random;
+    public Random random;
     private ObjectMap inMap; 
     
     private MyGdxGame game;
@@ -99,10 +99,11 @@ public class ObjectNPC extends ObjectAbstract{
     
     public void doAI(){
     	
+    	ThreadNpc tnpc = this.game.getThreadNpc();
     	
     	//body status changes and takes effect
-    	this.increaseNeed();
-    	this.cycleBody();
+    	this.increaseNeed(tnpc);//1
+    	this.cycleBody(tnpc);//2
     	
     	//reducing the AI calculating burden
     	this.addRC();
@@ -110,17 +111,17 @@ public class ObjectNPC extends ObjectAbstract{
     		//this.printSelfInfo();
     		
     		//increase need
-        	this.checkNeed();
-        	this.updatePersonalAbilities();
+        	this.checkNeed(tnpc);//3
+        	this.updatePersonalAbilities(tnpc);//4
         	//deciding the daily job(by professional)
-        	this.decideJob();
+        	this.decideJob(tnpc);//5
     	}
     	this.recoverRC();
     	
     	//doing the job in queue
     	this.doJob();
     	//refresh queue, pop-out object such as null item (remove by system, used by others, etc)
-    	this.refreshQueue();  
+    	this.refreshQueue();
     }
     private void addRC(){
     	this.currentTimeRC+=Gdx.graphics.getDeltaTime();
@@ -158,44 +159,92 @@ public class ObjectNPC extends ObjectAbstract{
     	this.lifeStatus = baseEnergyConsumption*60*expectedLifeInSec;
     	
 	}
-	private void updatePersonalAbilities(){
-		float speed_tmp=0;
-		float baseEC_tmp=0;
-		for(int i=0;i<bpNumber;i++){
-			speed_tmp+=this.bpTraits[i].traits.dex;
-			baseEC_tmp+=(this.bpTraits[i].traits.str+this.bpTraits[i].traits.vit);
-		}
-		this.speed = speed_tmp*speedBase;
-    	this.baseEnergyConsumption = baseEC_tmp*Gdx.graphics.getDeltaTime();
-	}
-
-	
     private void initNeed(){
     	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,0,0,100,null,null) );
     	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,0,100,100,null,null) );
     	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0,100,100,null,null) );
     }
-    private void increaseNeed(){
-    	if(this.species==ObjectNPC.HUMAN){
-        	for(int i=0;i<needQueue.size;i++){
-        		needQueue.get(i).tickLevel = baseEnergyConsumption;
-        		needQueue.get(i).tickNeed();
-        	}
+    private void increaseNeed(ThreadNpc tnpc){
+    	if(tnpc!=null){
+    		tnpc.addRequest(this,1);
     	}
     }
-    private void cycleBody(){
-    	boolean allNeedPassed= true;
-    	for(int i=0;i<this.needQueue.size;i++){
-    		if(this.needQueue.get(i).currentLevel>=this.needQueue.get(i).maxLevel){
-    			this.damageBody(this.baseEnergyConsumption);
-    			allNeedPassed = false;
+    private void cycleBody(ThreadNpc tnpc){
+    	if(tnpc!=null){
+    		tnpc.addRequest(this,2);
+    	}
+    }
+    private void checkNeed(ThreadNpc tnpc){
+    	if(tnpc!=null){
+    		tnpc.addRequest(this,3);
+    	}
+    }
+
+	private void updatePersonalAbilities(ThreadNpc tnpc){
+    	if(tnpc!=null){
+    		tnpc.addRequest(this,4);
+    	}	
+	}
+    private void decideJob(ThreadNpc tnpc){
+    	if(tnpc!=null){
+    		tnpc.addRequest(this,5);
+    	}	
+    }
+    private void doJob(){
+    	//get first job(current)
+    	if(jobQueue.size==0){
+    		return;
+    	}
+    	
+    	
+    	//do job
+    	this.cjob = jobQueue.first();
+    	if(this.cjob instanceof JobMove){
+    		JobMove mj = (JobMove)this.cjob;
+    		this.walkOneTick(mj);
+    	}
+    	else if(this.cjob instanceof JobRest){
+    		JobRest rj = (JobRest)this.cjob;
+    		this.rest(rj);
+    	}
+    	else if(this.cjob instanceof JobConsume){
+    		JobConsume cj = (JobConsume)this.cjob;
+    		this.consumeItem(cj);
+    	}
+    	else if(this.cjob instanceof JobTake){
+    		JobTake tj = (JobTake) this.cjob;
+    		this.takeItem(tj);
+    	}
+    	
+    	//check progress
+    	if(this.checkJobDone(this.cjob)){
+    		this.jobConsequence(this.cjob);
+    		jobQueue.removeFirst();
+    		this.cjob=null;
+    	}
+    	
+    }
+    private void refreshQueue(){
+    	Queue<ItemAbstract> tmpQ;
+    	for(int i=0;i<needQueue.size;i++){
+			if(needQueue.get(i).neededItemQueue.size!=0 ){
+				tmpQ = needQueue.get(i).neededItemQueue;
+				for(int j=0;j<tmpQ.size;j++){
+					if(tmpQ.get(j)==null  ||  tmpQ.get(j).itemNeedDestroy()){
+						tmpQ.removeIndex(j);
+					}
+				}
+			}
+    	}
+    	
+    	for(int i=0;i<itemQueue.size;i++){
+    		itemQueue.get(i).itemTimePass();
+    		if(itemQueue.get(i).itemNeedDestroy()){
+    			itemQueue.removeIndex(i);
     		}
     	}
-    	if(allNeedPassed){
-    		this.recoverBody(this.baseEnergyConsumption*0.5f);
-    	}
     }
-    private void recoverBody(float amount){
+    public void recoverBody(float amount){
     	if(this.lifeStatus-amount>this.maxLifeStatus){
     		this.lifeStatus=this.maxLifeStatus;
     	}
@@ -203,7 +252,7 @@ public class ObjectNPC extends ObjectAbstract{
     		this.lifeStatus+=amount;
     	}
     }
-    private void damageBody(float amount){
+    public void damageBody(float amount){
     	if(this.lifeStatus-amount<=0){
     		this.lifeStatus=0;
     	}
@@ -214,87 +263,6 @@ public class ObjectNPC extends ObjectAbstract{
     public boolean isNpcDead(){
     	//return false;
     	return this.lifeStatus<=0;
-    }
-    private void checkNeed(){
-    	boolean useThread = true;
-    	if(useThread){
-	    	ThreadNpc tnpc = this.game.getThreadNpc();
-	    	if(tnpc!=null){
-	    		tnpc.addRequest(this);
-	    	}
-    	}
-    	else{
-    	
-    	for(int i=0;i<needQueue.size;i++){
-    		float c = needQueue.get(i).currentLevel;
-    		float m = needQueue.get(i).maxLevel;
-    		
-    		if(c<m) continue; 
-
-			if( needQueue.get(i) instanceof NeedFatigue) {
-				if (!needQueue.get(i).handledInQueue){
-					jobQueue.addFirst( new JobRest(this.gPosition,m,m-c,0,0,0f,0f));
-					needQueue.get(i).handledInQueue = true;
-				}
-			}
-			else if( needQueue.get(i) instanceof NeedHunger  ||  needQueue.get(i) instanceof NeedThirst) {
-				//no candidates item in queue, start to search
-				ItemAbstract onBodyItem ;
-				ItemAbstract onGroundItem ;
-				ItemAbstract goal;
-				
-				//NPC has no idea where the item is
-				if(needQueue.get(i).neededItemQueue.size==0 ){
-					//find it on NPC body
-					onBodyItem = this.findItemOnBody(needQueue.get(i));
-					
-					//found
-					if(onBodyItem!=null){
-						needQueue.get(i).neededItemQueue.addLast(onBodyItem);
-					}
-					//not found
-					else{
-						//find it on the ground
-						onGroundItem = this.findItemOnGround(needQueue.get(i));
-						
-						//found 
-						if(onGroundItem!=null){
-    	    				if (!needQueue.get(i).handledInQueue){
-    	    					goal = onGroundItem;
-    	    					jobQueue.addLast(new JobMove(goal.gPosition,-1, -1, 0, 0,0,0));
-    	    					JobConsume pendingCJ = new JobConsume(goal.gPosition,m,m-c,0,0,0f,0f,null);
-    	    					
-    	    					jobQueue.addLast(new JobTake(goal.gPosition,-1,-1,goal.decreasedNeed_id,0,0f,0f,goal,pendingCJ));
-    	        				jobQueue.addLast(pendingCJ);
-    	        				needQueue.get(i).handledInQueue = true;
-    	    				}
-						}
-						//not found, screw the NPC. Ignore the need.
-						else{
-							//no item to solve the need. Let's rest (ignore) and see.
-							if (!needQueue.get(i).handledInQueue){
-								
-		    				}
-						}
-					}
-				}
-				//NPC know it's on its body
-				else{
-					onBodyItem = needQueue.get(i).neededItemQueue.first();
-    				//just on NPC body
-    				if (!needQueue.get(i).handledInQueue){
-    					goal = needQueue.get(i).neededItemQueue.first();
-    					goal.gPosition = this.gPosition;
-        				jobQueue.addFirst( new JobConsume(goal.gPosition,m,m-c,goal.decreasedNeed_id,0,0f,0f,goal));
-        				needQueue.get(i).handledInQueue = true;
-    				}
-				}
-    		
-			}
-		}
-    	
-    	}
-    	
     }
     public ItemAbstract findItemOnBody(NeedAbstract na){
     	Queue<ItemAbstract> q = this.itemQueue;
@@ -338,26 +306,6 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     	return null;
     }
-    private void refreshQueue(){
-    	Queue<ItemAbstract> tmpQ;
-    	for(int i=0;i<needQueue.size;i++){
-			if(needQueue.get(i).neededItemQueue.size!=0 ){
-				tmpQ = needQueue.get(i).neededItemQueue;
-				for(int j=0;j<tmpQ.size;j++){
-					if(tmpQ.get(j)==null  ||  tmpQ.get(j).itemNeedDestroy()){
-						tmpQ.removeIndex(j);
-					}
-				}
-			}
-    	}
-    	
-    	for(int i=0;i<itemQueue.size;i++){
-    		itemQueue.get(i).itemTimePass();
-    		if(itemQueue.get(i).itemNeedDestroy()){
-    			itemQueue.removeIndex(i);
-    		}
-    	}
-    }
     private void getItem(ItemAbstract ia1){
     	for(int i=0;i<itemQueue.size;i++){
     		if(itemQueue.get(i).id ==  ia1.id){
@@ -370,40 +318,7 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     	this.itemQueue.addLast(ia1);
     }
-    private void doJob(){   
-    	//get first job(current)
-    	if(jobQueue.size==0){
-    		return;
-    	}
-    	
-    	
-    	//do job
-    	cjob = jobQueue.first();
-    	if(cjob instanceof JobMove){
-    		JobMove mj = (JobMove)cjob;
-    		this.walkOneTick(mj);
-    	}
-    	else if(cjob instanceof JobRest){
-    		JobRest rj = (JobRest)cjob;
-    		this.rest(rj);
-    	}
-    	else if(cjob instanceof JobConsume){
-    		JobConsume cj = (JobConsume)cjob;
-    		this.consumeItem(cj);
-    	}
-    	else if(cjob instanceof JobTake){
-    		JobTake tj = (JobTake) cjob;
-    		this.takeItem(tj);
-    	}
-    	
-    	//check progress
-    	if(checkJobDone(cjob)){
-    		this.jobConsequence(cjob);
-			this.jobQueue.removeFirst();
-	    	cjob=null;
-    	}
-    }
-    private boolean checkJobDone(JobAbstract ja){
+    public boolean checkJobDone(JobAbstract ja){
 
     	if(ja instanceof JobMove){
     		if(this.gPosition.dst(ja.position)<=1){
@@ -429,7 +344,7 @@ public class ObjectNPC extends ObjectAbstract{
     	return false;
     }
     
-    private void jobConsequence(JobAbstract ja){
+    public void jobConsequence(JobAbstract ja){
 
 		this.needQueue.get(ja.decreasedNeed_id).handledInQueue=false;
 		
@@ -474,15 +389,7 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     	
     }
-    private void decideJob(){
-    	
-    	if(this.jobQueue.size==0){
-    		float x_d = random.nextFloat()*Gdx.graphics.getWidth();
-    		float y_d = random.nextFloat()*Gdx.graphics.getHeight();
-        	this.jobQueue.addLast(new JobMove(new Vector2(x_d,y_d),-1, -1, 0, 0,0,0));
-    	}
-    }
-    private void walkOneTick(JobMove mj){
+    public void walkOneTick(JobMove mj){
     	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed(this.baseEnergyConsumption);
     	Vector2 vtmp = new Vector2(mj.position.x - this.gPosition.x, mj.position.y - this.gPosition.y);
     	
@@ -493,11 +400,11 @@ public class ObjectNPC extends ObjectAbstract{
     	this.gPosition.add(vtmp);
     }
 
-    private void rest(JobRest rj){
+    public void rest(JobRest rj){
     	rj.currentProgress +=(rj.maxProgress/100) ;
     	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed((this.baseEnergyConsumption)*-20);
     }
-    private void consumeItem(JobConsume cj){
+    public void consumeItem(JobConsume cj){
     	if(cj.consumedItem==null){
     		cj.jobAborted = true;
     		cj.currentProgress = cj.maxProgress;
@@ -518,7 +425,7 @@ public class ObjectNPC extends ObjectAbstract{
     	cj.currentProgress+=cj.maxProgress/100;
 	
     }
-    private void takeItem(JobTake tj){
+    public void takeItem(JobTake tj){
     	if(tj.takenItem==null){
     		tj.jobAborted = true;
     		tj.currentProgress = tj.maxProgress;
@@ -543,7 +450,7 @@ public class ObjectNPC extends ObjectAbstract{
     private int determineTakingItemNumber(){
     	return random.nextInt(3)+1;
     }
-    private void produceItem(){
+    public void produceItem(){
     	//produce dummy food
 		//this.inMap.item_ground.addFirst(new ItemFood(5, this.getRandomLoc(),0,"free food by "+this.id,1,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_THIRST_ID,50,50,null));
 		//this.inMap.item_ground.addFirst(new ItemFood(5, this.getRandomLoc(),0,"free water by "+this.id,1,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null));
@@ -609,6 +516,10 @@ public class ObjectNPC extends ObjectAbstract{
 
 	public Queue<JobAbstract> getJobQueue(){
 		return this.jobQueue;
+	}
+
+	public Queue<ItemAbstract> getItemQueue(){
+		return this.itemQueue;
 	}
 
 	private Vector2 getRandomLoc(){

@@ -31,7 +31,7 @@ import com.mygdx.util.ThreadNpc;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 2000;
+	public static final int npc_number = 1000;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
@@ -44,7 +44,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Queue<ItemAbstract> item_queue;
 	
 	private Queue<ThreadNpc> threadnpc_pool;
-	private static final int threadnpc_pool_number=4;
+	private static final int threadnpc_pool_number=1;
 
 	private Random random = new Random();
 	
@@ -182,7 +182,6 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	private void drawNpcFont(){
 		for(int i=0;i<npc_queue.size;i++){
-			//npc_list[i].render(batch);
 			npc_queue.get(i).renderFont(batch);
 		}	
 	}
