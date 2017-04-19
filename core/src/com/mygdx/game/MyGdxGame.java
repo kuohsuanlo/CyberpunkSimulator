@@ -18,6 +18,7 @@ import com.mygdx.item.ItemFood;
 import com.mygdx.need.NeedAbstract;
 import com.mygdx.need.NeedHunger;
 import com.mygdx.need.NeedThirst;
+import com.mygdx.util.ThreadNpc;
 
 
 
@@ -30,7 +31,7 @@ import com.mygdx.need.NeedThirst;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 250;
+	public static final int npc_number = 2000;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
@@ -43,10 +44,13 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Queue<ItemAbstract> item_queue;
 	
 	private Random random = new Random();
+	private ThreadNpc[] threadnpc_pool;
+	private static final int threadnpc_pool_number=10;
 	
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
+		this.initThreadPool();
 		this.initMap();
 		this.initNpc();
 		this.initItem();
@@ -86,7 +90,13 @@ public class MyGdxGame extends ApplicationAdapter {
 		InGameInputProcessor inputProcessor = new InGameInputProcessor(this);
 		Gdx.input.setInputProcessor(inputProcessor);
 	}
-	
+	private void initThreadPool(){
+		this.threadnpc_pool= new ThreadNpc[threadnpc_pool_number];
+		for(int i=0;i<threadnpc_pool_number;i++){
+			this.threadnpc_pool[i] = new ThreadNpc();
+			this.threadnpc_pool[i].start();
+		}
+	}
 	
 	private void initMap(){
 		item_queue = new Queue<ItemAbstract>();
@@ -99,7 +109,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private void initNpc(){
 		npc_queue = new Queue<ObjectNPC>();
 		for(int id=0;id<npc_number;id++){
-			npc_queue.addLast( new ObjectNPC(id,id%npc_resource_nubmer,ObjectNPC.HUMAN,map,random) );
+			npc_queue.addLast( new ObjectNPC(id,id%npc_resource_nubmer,ObjectNPC.HUMAN,map,random,this) );
 		}
 	}	
 	private void initItem(){
@@ -191,6 +201,24 @@ public class MyGdxGame extends ApplicationAdapter {
 		//Draw 
 		for(int i=0;i<this.map_render_size_x*this.map_render_size_y;i++){
 			batch.draw(map.tr_texture[this.map_buffer[i]],this.current_block_size*(i/this.map_render_size_x),current_block_size*(i%this.map_render_size_x));
+		}
+	}
+	public ThreadNpc getThreadNpc(){
+		return this.threadnpc_pool[random.nextInt(this.threadnpc_pool_number)];
+		//return getLeastBusyThread();
+	}
+	public ThreadNpc getLeastBusyThread(){
+		int min_idx=-1;
+		int min_number=ThreadNpc.requestQueueMax+1;
+		for(int i=0;i<threadnpc_pool_number;i++){
+			if(this.threadnpc_pool[i].getCurrentRequestNumber()<min_number){
+				min_idx = i;
+				min_number = this.threadnpc_pool[i].getCurrentRequestNumber();
+			}
+		}
+		if(min_idx==-1) return null;
+		else{
+			return this.threadnpc_pool[min_idx];
 		}
 	}
 	public Vector2 s2c(int x, int y){

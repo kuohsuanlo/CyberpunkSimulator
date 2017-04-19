@@ -21,7 +21,7 @@ public class ObjectNPC extends ObjectAbstract{
 	 * AI recalculating time
 	 */
 	private float currentTimeRC ;
-	private float maxTimeRC = 1f;
+	private float maxTimeRC = 1.5f;
 	private float speedBase = 60f;
 	private int expectedLifeInSec = 3600;
 	
@@ -61,13 +61,16 @@ public class ObjectNPC extends ObjectAbstract{
     private Random random;
     private ObjectMap inMap; 
     
-    public ObjectNPC(int gid, int tid,int species,ObjectMap im, Random random) {
+    private MyGdxGame game;
+    
+    public ObjectNPC(int gid, int tid,int species,ObjectMap im, Random random, MyGdxGame game) {
     	super();
     	
     	this.id = gid;
     	this.species = species;
     	this.random = random;
     	this.currentTimeRC = random.nextFloat()*this.maxTimeRC;
+    	this.game = game;
     	
     	gPosition.x = random.nextFloat()*Gdx.graphics.getWidth();
     	gPosition.y = random.nextFloat()*Gdx.graphics.getHeight();
@@ -214,76 +217,9 @@ public class ObjectNPC extends ObjectAbstract{
     	return this.lifeStatus<=0;
     }
     private void checkNeed(){
-    	
-    	
-    	for(int i=0;i<needQueue.size;i++){
-    		float c = needQueue.get(i).currentLevel;
-    		float m = needQueue.get(i).maxLevel;
-    		
-    		if(c<m) continue; 
-
-			if( needQueue.get(i) instanceof NeedFatigue) {
-				if (!needQueue.get(i).handledInQueue){
-					this.jobQueue.addFirst( new JobRest(this.gPosition,m,m-c,0,0,0f,0f));
-					needQueue.get(i).handledInQueue = true;
-				}
-			}
-			else if( needQueue.get(i) instanceof NeedHunger  ||  needQueue.get(i) instanceof NeedThirst) {
-				//no candidates item in queue, start to search
-				ItemAbstract onBodyItem ;
-				ItemAbstract onGroundItem ;
-				ItemAbstract goal;
-				
-				//NPC has no idea where the item is
-				if(needQueue.get(i).neededItemQueue.size==0 ){
-					//find it on NPC body
-					onBodyItem = this.findItemOnBody(needQueue.get(i));
-					
-					//found
-					if(onBodyItem!=null){
-						needQueue.get(i).neededItemQueue.addLast(onBodyItem);
-					}
-					//not found
-					else{
-						//find it on the ground
-						onGroundItem = this.findItemOnGround(needQueue.get(i));
-						
-						//found 
-						if(onGroundItem!=null){
-    	    				if (!needQueue.get(i).handledInQueue){
-    	    					goal = onGroundItem;
-    	    					this.jobQueue.addLast(new JobMove(goal.gPosition,-1, -1, 0, 0,0,0));
-    	    					JobConsume pendingCJ = new JobConsume(goal.gPosition,m,m-c,0,0,0f,0f,null);
-    	    					
-    	    					this.jobQueue.addLast(new JobTake(goal.gPosition,-1,-1,goal.decreasedNeed_id,0,0f,0f,goal,pendingCJ));
-    	        				this.jobQueue.addLast(pendingCJ);
-    	        				needQueue.get(i).handledInQueue = true;
-    	    				}
-						}
-						//not found, screw the NPC. Ignore the need.
-						else{
-							//no item to solve the need. Let's rest (ignore) and see.
-							if (!needQueue.get(i).handledInQueue){
-								
-		    				}
-						}
-					}
-				}
-				//NPC know it's on its body
-				else{
-					onBodyItem = this.needQueue.get(i).neededItemQueue.first();
-    				//just on NPC body
-    				if (!needQueue.get(i).handledInQueue){
-    					goal = needQueue.get(i).neededItemQueue.first();
-    					goal.gPosition = this.gPosition;
-        				this.jobQueue.addFirst( new JobConsume(goal.gPosition,m,m-c,goal.decreasedNeed_id,0,0f,0f,goal));
-        				needQueue.get(i).handledInQueue = true;
-    				}
-				}
-    		}
-    	}
+    	this.game.getThreadNpc().addRequest(this);
     }
-    private ItemAbstract findItemOnBody(NeedAbstract na){
+    public ItemAbstract findItemOnBody(NeedAbstract na){
     	Queue<ItemAbstract> q = this.itemQueue;
     	if(na instanceof NeedHunger){		
 			//searching item for hunger need
@@ -295,7 +231,7 @@ public class ObjectNPC extends ObjectAbstract{
     	}		
 		return null;	
     }
-    private ItemAbstract findItemOnGround(NeedAbstract na){
+    public ItemAbstract findItemOnGround(NeedAbstract na){
 		Queue<ItemAbstract> q = this.inMap.item_ground;
     	if(na instanceof NeedHunger){		
 			//searching item for hunger need
@@ -589,6 +525,13 @@ public class ObjectNPC extends ObjectAbstract{
 	public String getDisplayName() {
 		// TODO Auto-generated method stub
 		return "NPC : "+this.id;
+	}
+	public Queue<NeedAbstract> getNeedQueue(){
+		return this.needQueue;
+	}
+
+	public Queue<JobAbstract> getJobQueue(){
+		return this.jobQueue;
 	}
 
 	private Vector2 getRandomLoc(){
