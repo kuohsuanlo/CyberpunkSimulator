@@ -12,6 +12,18 @@ public class JobConsume extends JobAbstract{
 				increaseNeed_amount);
 		this.consumedItem = consumedItem;
 	}
+	
+	public boolean compareJobAbstract(JobAbstract ja) {
+		if(ja==null) return false;
+		
+		if(ja instanceof JobConsume){
+			return compareItem(this.consumedItem,((JobConsume) ja).consumedItem);
+		}
+		else{
+			return false;
+		}
+		
+	}
 
 
 }

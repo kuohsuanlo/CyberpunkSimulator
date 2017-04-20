@@ -10,6 +10,15 @@ public class JobMove extends JobAbstract{
 				increaseNeed_amount);
 	}
 
-
+	public boolean compareJobAbstract(JobAbstract ja) {
+		if(ja==null) return false;
+		
+		if(ja instanceof JobMove){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
 
 }

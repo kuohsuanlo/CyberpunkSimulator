@@ -22,4 +22,14 @@ public class JobTake extends JobAbstract{
 		this.nextPendingJob = nextPendingJob;
 	}
 
+	public boolean compareJobAbstract(JobAbstract ja) {
+		if(ja==null) return false;
+		
+		if(ja instanceof JobTake){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
 }

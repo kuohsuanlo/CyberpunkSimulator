@@ -17,5 +17,16 @@ public class JobProduce extends JobAbstract{
 		this.producedItemQueue = producedItemQueue;
 	}
 
-
+	public boolean compareJobAbstract(JobAbstract ja) {
+		if(ja==null) return false;
+		
+		if(ja instanceof JobProduce){
+			return compareItemQueue(this.usedItemQueue,((JobProduce) ja).usedItemQueue)  &&
+					compareItemQueue(this.producedItemQueue,((JobProduce) ja).producedItemQueue) ;
+		}
+		else{
+			return false;
+		}
+		
+	}
 }
