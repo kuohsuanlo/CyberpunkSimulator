@@ -126,7 +126,7 @@ public class ObjectNPC extends ObjectAbstract{
     }
     private boolean needRC(){
     	if(this.currentTimeRC>=this.maxTimeRC){
-    		this.currentTimeRC=0;
+    		this.currentTimeRC-=maxTimeRC;
     		return true;
     	}
     	return false;
