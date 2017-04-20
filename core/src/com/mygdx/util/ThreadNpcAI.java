@@ -17,9 +17,10 @@ import com.mygdx.need.NeedHunger;
 import com.mygdx.need.NeedThirst;
 
 public class ThreadNpcAI extends Thread{
-	public static final int requestQueueMax = MyGdxGame.npc_number*20/MyGdxGame.threadnpc_pool_number;
+	public int requestQueueMax;
 	private Queue<ObjectRequest> npcr_queue;
-	public ThreadNpcAI(){
+	public ThreadNpcAI(MyGdxGame game){
+		this.requestQueueMax = game.getThreadNpcAIQueueMaxNumber();
 		npcr_queue = new Queue<ObjectRequest>();
 	}
 	private void processIncreaseNeed(ObjectRequest oq){

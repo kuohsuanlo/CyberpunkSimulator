@@ -30,7 +30,8 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 50;
+	public static final int npc_number = 1000;
+	public static final int avg_aiq_number = 200;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
@@ -43,8 +44,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Queue<ItemAbstract> item_queue;
 	
 	private Queue<ThreadNpcAI> threadnpc_pool;
-	public static final int threadnpc_pool_number=2;
-
+	
+	private int threadnpc_pool_number;
 	private Random random = new Random();
 	
 	@Override
@@ -91,9 +92,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(inputProcessor);
 	}
 	private void initThreadPool(){
+		this.threadnpc_pool_number = Math.max(2, Runtime.getRuntime().availableProcessors());
 		this.threadnpc_pool= new Queue<ThreadNpcAI>();
 		for(int i=0;i<threadnpc_pool_number;i++){
-			ThreadNpcAI Ttmp = new ThreadNpcAI();
+			ThreadNpcAI Ttmp = new ThreadNpcAI(this);
 			this.threadnpc_pool.addLast(Ttmp);
 			Ttmp.start();
 		}
@@ -203,13 +205,19 @@ public class MyGdxGame extends ApplicationAdapter {
 			batch.draw(map.tr_texture[this.map_buffer[i]],this.current_block_size*(i/this.map_render_size_x),current_block_size*(i%this.map_render_size_x));
 		}
 	}
+	public int getThreadPoolNpcNumber(){
+		return this.threadnpc_pool_number;
+	}
 	public ThreadNpcAI getThreadNpc(){
 		return this.threadnpc_pool.get(random.nextInt(threadnpc_pool_number));
 		//return getLeastBusyThread();
 	}
+	public int getThreadNpcAIQueueMaxNumber(){
+		return npc_number*avg_aiq_number/this.threadnpc_pool_number;
+	}
 	public ThreadNpcAI getLeastBusyThread(){
 		int min_idx=-1;
-		int min_number=ThreadNpcAI.requestQueueMax+1;
+		int min_number=getThreadNpcAIQueueMaxNumber()+1;
 		for(int i=0;i<threadnpc_pool.size;i++){
 			if(threadnpc_pool.get(i).getCurrentRequestNumber()<min_number){
 				min_idx = i;
@@ -245,43 +253,39 @@ class InGameInputProcessor implements InputProcessor {
 
 	@Override
 	public boolean keyDown(int keycode) {
-		// TODO Auto-generated method stub
+
 		return false;
 	}
 
 	@Override
 	public boolean keyUp(int keycode) {
-		// TODO Auto-generated method stub
+
 		return false;
 	}
 
 	@Override
 	public boolean keyTyped(char character) {
-		// TODO Auto-generated method stub
+
 		return false;
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean scrolled(int amount) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 }

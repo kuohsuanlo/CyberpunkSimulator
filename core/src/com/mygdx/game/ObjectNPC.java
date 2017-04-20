@@ -21,7 +21,7 @@ public class ObjectNPC extends ObjectAbstract{
 	 * AI recalculating time
 	 */
 	private float currentTimeRC ;
-	private float maxTimeRC = 1.0f;
+	private float maxTimeRC = 0.5f;
 	private float speedBase = 60f;
 	private int expectedLifeInSec = 3600;
 	
@@ -107,6 +107,7 @@ public class ObjectNPC extends ObjectAbstract{
     	//reducing the AI calculating burden
     	this.addRC();
     	if(this.needRC()){
+    		//this.printSelfInfo();
     		//increase need
         	this.checkNeed(tnpc);//3
         	this.updatePersonalAbilities(tnpc);//4
@@ -352,7 +353,6 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     }
     public boolean checkJobDone(JobAbstract ja){
-
     	if(ja instanceof JobMove){
     		if(this.gPosition.dst(ja.getPosition())<=1){
 				return true;
@@ -377,7 +377,7 @@ public class ObjectNPC extends ObjectAbstract{
     	return false;
     }
     
-    public void jobConsequence(JobAbstract ja){
+    private void jobConsequence(JobAbstract ja){
 
 		this.needQueue.get(ja.getDecreasedNeed_id()).handledInQueue=false;
 		
@@ -548,13 +548,14 @@ public class ObjectNPC extends ObjectAbstract{
     			Gdx.app.log("NPC"+this.id+"_JOB:"+i, this.jobQueue.get(i).getClass()+""+this.jobQueue.get(i));
     		}
     	}
+    	/*
     	for(int i=0;i<this.needQueue.size;i++){
     		Gdx.app.log("NPC"+this.id+"_NEED"+this.needQueue.get(i).id, this.needQueue.get(i).displayName+" : "+this.needQueue.get(i).currentLevel+"/"+this.needQueue.get(i).maxLevel+" InQueue : "+this.needQueue.get(i).handledInQueue+"niq : "+this.needQueue.get(i).neededItemQueue.size);
     	}
     	for(int i=0;i<this.itemQueue.size;i++){
     		Gdx.app.log("NPC"+this.id+"_ITEM"+this.itemQueue.get(i).getId(),"snum : "+this.itemQueue.get(i).getStack_number());
     	}
-    	
+    	*/
 
     	Gdx.app.log("NPC"+this.id+"_BASE ", this.getBaseEnergyConsumption()+"");
 	}
