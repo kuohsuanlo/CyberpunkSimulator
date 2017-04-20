@@ -3,25 +3,26 @@ package com.mygdx.job;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.ItemAbstract;
+import com.mygdx.need.NeedAbstract;
 
 public abstract class JobAbstract {
 	
 	private Vector2 position;
 	private float maxProgress;
 	private float currentProgress;
-	private int decreasedNeed_id;
-	private int increasedNeed_id;
+	private NeedAbstract decreasedNeed;
+	private NeedAbstract increasedNeed;
 	private float decreaseNeed_amount;
 	private float increaseNeed_amount;
 	private boolean jobAborted;
-	public JobAbstract(Vector2 position, float maxProgress, float currentProgress, int decreasedNeed_id,
-			int increasedNeed_id, float decreaseNeed_amount, float increaseNeed_amount) {
+	public JobAbstract(Vector2 position, float maxProgress, float currentProgress, NeedAbstract decreasedNeed,
+			NeedAbstract increasedNeed, float decreaseNeed_amount, float increaseNeed_amount) {
 		super();
 		this.setPosition(position);
 		this.setMaxProgress(maxProgress);
 		this.setCurrentProgress(currentProgress);
-		this.setDecreasedNeed_id(decreasedNeed_id);
-		this.setIncreasedNeed_id(increasedNeed_id);
+		this.setDecreasedNeed(decreasedNeed);
+		this.setIncreasedNeed(increasedNeed);
 		this.setDecreaseNeed_amount(decreaseNeed_amount);
 		this.setIncreaseNeed_amount(increaseNeed_amount);
 		this.setJobAborted(false);
@@ -68,17 +69,17 @@ public abstract class JobAbstract {
 	public void setCurrentProgress(float currentProgress) {
 		this.currentProgress = currentProgress;
 	}
-	public int getDecreasedNeed_id() {
-		return decreasedNeed_id;
+	public NeedAbstract getDecreasedNeed() {
+		return decreasedNeed;
 	}
-	public void setDecreasedNeed_id(int decreasedNeed_id) {
-		this.decreasedNeed_id = decreasedNeed_id;
+	public void setDecreasedNeed(NeedAbstract decreasedNeed) {
+		this.decreasedNeed = decreasedNeed;
 	}
-	public int getIncreasedNeed_id() {
-		return increasedNeed_id;
+	public NeedAbstract getIncreasedNeed() {
+		return increasedNeed;
 	}
-	public void setIncreasedNeed_id(int increasedNeed_id) {
-		this.increasedNeed_id = increasedNeed_id;
+	public void setIncreasedNeed(NeedAbstract increasedNeed) {
+		this.increasedNeed = increasedNeed;
 	}
 	public float getDecreaseNeed_amount() {
 		return decreaseNeed_amount;

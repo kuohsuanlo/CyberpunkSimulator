@@ -1,13 +1,15 @@
 package com.mygdx.job;
 
 import com.badlogic.gdx.math.Vector2;
+import com.mygdx.need.NeedAbstract;
 
 public class JobMove extends JobAbstract{
 
-	public JobMove(Vector2 position, float maxProgress, float currentProgress, int decreasedNeed_id,
-			int increasedNeed_id, float decreaseNeed_amount, float increaseNeed_amount) {
-		super(position, maxProgress, currentProgress, decreasedNeed_id, increasedNeed_id, decreaseNeed_amount,
-				increaseNeed_amount);
+
+	public JobMove(Vector2 position, float maxProgress, float currentProgress, NeedAbstract decreasedNeed,
+			NeedAbstract increasedNeed, float decreaseNeed_amount, float increaseNeed_amount) {
+		super(position, maxProgress, currentProgress, decreasedNeed, increasedNeed, decreaseNeed_amount, increaseNeed_amount);
+		// TODO Auto-generated constructor stub
 	}
 
 	public boolean compareJobAbstract(JobAbstract ja) {
