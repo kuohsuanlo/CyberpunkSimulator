@@ -118,16 +118,16 @@ public class ThreadNpcAI extends Thread{
     	    					JobTake jt = new JobTake(goal.gPosition,-1,-1,null,null,0f,0f,goal,pendingCJ);
 
     	    					//Inverse Order;
-    	    					/*
+    	    					
     	    					jobQueue.addFirst(pendingCJ);
     	    					jobQueue.addFirst(jt);
     	    					jobQueue.addFirst(jm);
-    	    					*/
-
+    	    					
+    	    					/*
     	    					jobQueue.addLast(jm);
     	    					jobQueue.addLast(jt);
     	    					jobQueue.addLast(pendingCJ);
-    	    					
+    	    					*/
     	        				needQueue.get(i).handledInQueue = true;
     	    				}
 						}
@@ -163,7 +163,7 @@ public class ThreadNpcAI extends Thread{
 			baseEC_tmp+=(oq.npc.getBpTraits()[i].traits.str+oq.npc.getBpTraits()[i].traits.vit);
 		}
 		oq.npc.setSpeed(speed_tmp*oq.npc.getSpeedBase());
-		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime()*(1f/10));
+		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime()*(1f/2));
 	}
 	private void processDecideJob(ObjectRequest oq){
 		

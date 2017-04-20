@@ -30,7 +30,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 400;
+	public static final int npc_number = 3;
 	public static final int avg_aiq_number = 200;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
