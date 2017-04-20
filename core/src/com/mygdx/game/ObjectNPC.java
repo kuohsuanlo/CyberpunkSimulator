@@ -105,7 +105,7 @@ public class ObjectNPC extends ObjectAbstract{
     	this.cycleBody(tnpc);//2
     	
     	//reducing the AI calculating burden
-    	this.addRC();
+    	this.tickRC();
     	if(this.needRC()){
     		//this.printSelfInfo();
     		//increase need
@@ -114,24 +114,22 @@ public class ObjectNPC extends ObjectAbstract{
         	//deciding the daily job(by professional)
         	this.decideJob(tnpc);//5
     	}
-    	this.recoverRC();
+    	
     	
     	//doing the job in queue
     	this.doJob();
     	//refresh queue, pop-out object such as null item (remove by system, used by others, etc)
     	this.refreshQueue();
     }
-    private void addRC(){
+    private void tickRC(){
     	this.currentTimeRC+=Gdx.graphics.getDeltaTime();
     }
-    private void recoverRC(){
-    	if(this.needRC()){
-        	this.currentTimeRC=0;
-    	}
-    }
     private boolean needRC(){
-    	//return true;;
-    	return this.currentTimeRC>=this.maxTimeRC;
+    	if(this.currentTimeRC>=this.maxTimeRC){
+    		this.currentTimeRC=0;
+    		return true;
+    	}
+    	return false;
     }
 
 	private void initBodyPartTraits(){
@@ -158,9 +156,9 @@ public class ObjectNPC extends ObjectAbstract{
     	
 	}
     private void initNeed(){
-    	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,0,0,getNeedMax(NeedAbstract.NEED_FATIGUE_ID),null,null) );
-    	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,0,getNeedMax(NeedAbstract.NEED_HUNGER_ID),getNeedMax(NeedAbstract.NEED_HUNGER_ID),null,null) );
-    	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0,getNeedMax(NeedAbstract.NEED_THIRST_ID),getNeedMax(NeedAbstract.NEED_THIRST_ID),null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,0,random.nextInt(Math.round(getNeedMax(NeedAbstract.NEED_FATIGUE_ID))),getNeedMax(NeedAbstract.NEED_FATIGUE_ID),null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,0,random.nextInt(Math.round(getNeedMax(NeedAbstract.NEED_HUNGER_ID))),getNeedMax(NeedAbstract.NEED_HUNGER_ID),null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0,random.nextInt(Math.round(getNeedMax(NeedAbstract.NEED_THIRST_ID))),getNeedMax(NeedAbstract.NEED_THIRST_ID),null,null) );
     }
 	private float getNeedMax(int type){
 		float base_tmp=0;
