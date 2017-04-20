@@ -30,7 +30,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 1000;
+	public static final int npc_number = 1;
 	public static final int avg_aiq_number = 200;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
@@ -132,6 +132,8 @@ public class MyGdxGame extends ApplicationAdapter {
 				ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
 				item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",1,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,50,0,null,bucket));
 			}
+			item_queue.addFirst(new ItemFood(3,getRandomLoc() ,0,"free bucket",1,0,0,0f,0f,null));
+			
 		}
 	}
 	private Vector2 getRandomLoc(){

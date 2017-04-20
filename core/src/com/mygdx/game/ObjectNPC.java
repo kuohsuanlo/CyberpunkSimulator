@@ -21,7 +21,7 @@ public class ObjectNPC extends ObjectAbstract{
 	 * AI recalculating time
 	 */
 	private float currentTimeRC ;
-	private float maxTimeRC = 0.5f;
+	private float maxTimeRC = 1f;
 	private float speedBase = 60f;
 	private int expectedLifeInSec = 3600;
 	
@@ -107,7 +107,7 @@ public class ObjectNPC extends ObjectAbstract{
     	//reducing the AI calculating burden
     	this.addRC();
     	if(this.needRC()){
-    		//this.printSelfInfo();
+    		this.printSelfInfo();
     		//increase need
         	this.checkNeed(tnpc);//3
         	this.updatePersonalAbilities(tnpc);//4
@@ -161,6 +161,7 @@ public class ObjectNPC extends ObjectAbstract{
     	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,0,random.nextInt(100),getNeedMax(NeedAbstract.NEED_FATIGUE_ID),null,null) );
     	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,0,random.nextInt(100),getNeedMax(NeedAbstract.NEED_HUNGER_ID),null,null) );
     	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0,random.nextInt(100),getNeedMax(NeedAbstract.NEED_THIRST_ID),null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedJob("job",0,0,100,getNeedMax(NeedAbstract.NEED_THIRST_ID),null,null,null) );
     }
 	private float getNeedMax(int type){
 		float base_tmp=0;
@@ -181,7 +182,7 @@ public class ObjectNPC extends ObjectAbstract{
 				}
 				return base_tmp*100f*(0.5f+0.5f*random.nextFloat());
 			default:
-				return 300;
+				return 100;
 		}
 	}
     private void increaseNeed(ThreadNpcAI tnpc){
@@ -233,6 +234,10 @@ public class ObjectNPC extends ObjectAbstract{
     	else if(this.cjob instanceof JobTake){
     		JobTake tj = (JobTake) this.cjob;
     		this.takeItem(tj);
+    	}
+    	else if(this.cjob instanceof JobCollect){
+    		JobCollect cj = (JobCollect) this.cjob;
+    		this.collectItem(cj);
     	}
     	
     	//check progress
@@ -295,7 +300,7 @@ public class ObjectNPC extends ObjectAbstract{
     	}		
 		return null;	
     }
-    public ItemAbstract findItemOnGround(NeedAbstract na){
+    public ItemAbstract findItemForNeedOnGround(NeedAbstract na){
 		Queue<ItemAbstract> q = this.inMap.item_ground;
     	if(na instanceof NeedHunger){		
 			//searching item for hunger need
@@ -308,7 +313,36 @@ public class ObjectNPC extends ObjectAbstract{
 		return null;	
 
     }
-    
+    private Queue<ItemAbstract> findItemOnGround(ItemAbstract ia){
+    	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
+    	Queue<ItemAbstract> q = this.inMap.item_ground;
+    	int collectNumberInNeed = ia.getStack_number();
+    	/*
+    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
+    	 */
+    	for(int i=0;i<q.size;i++){
+    		if(q.get(i).getId()==ia.getId()){
+    			if(q.get(i).getStack_number()<collectNumberInNeed){
+    				collectNumberInNeed -=q.get(i).getStack_number();
+    				candidates.addFirst(q.get(i));
+    			}
+    			//Targets has more number of items than the NPC needed
+    			else{
+    				collectNumberInNeed=0;
+    				candidates.addFirst(q.get(i).getTaken(collectNumberInNeed));
+    			}
+    				
+    			if(collectNumberInNeed<=0){
+    				return candidates;
+    			}
+    			
+    			
+    		}
+    	}
+    	
+    	
+    	return null;
+    }
     private ItemAbstract findItemForNeed(Queue<ItemAbstract> q, int NEED_ID){
     	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
     	/*
@@ -336,7 +370,6 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     	this.itemQueue.addLast(ia1);
     }
-
     private void loseItem(ItemAbstract ia1){
     	for(int i=0;i<itemQueue.size;i++){
     		if(itemQueue.get(i).getId() ==  ia1.getId()){
@@ -373,7 +406,21 @@ public class ObjectNPC extends ObjectAbstract{
 				return true;	
 			}
     	}
+    	else if(ja instanceof JobCollect){
+			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
+				return true;	
+			}
+
+    	}
     	
+    	return false;
+    }
+    public boolean hasItem(ItemAbstract ia){
+    	for(int i=0;i<this.itemQueue.size;i++){
+    		if(this.itemQueue.get(i).getStack_number()>=ia.getStack_number()){
+    			return true;
+    		}
+    	}
     	return false;
     }
     
@@ -481,6 +528,55 @@ public class ObjectNPC extends ObjectAbstract{
     	}
 		tj.setCurrentProgress(tj.getMaxProgress());
     }
+    
+    public void collectItem(JobCollect cj){
+    	if(cj.collectItemQueue==null){
+    		cj.setJobAborted(true);
+    		return;
+    	}
+    	else if(cj.collectItemQueue.size==0){
+    		cj.setJobAborted(true);
+    		return;
+    	}
+    	
+    	/*
+    	 * All all foods, trash, etc to job queue.
+    	 */
+		for(int i=0;i<cj.collectItemQueue.size;i++){
+			Queue<ItemAbstract> ogiq = this.findItemOnGround(cj.collectItemQueue.get(i));
+			if(ogiq==null) return;
+				
+			for(int j=0;j<ogiq.size;j++){
+				/*
+				 * Add all foods to job queue. 
+				 */
+				jobQueue.addLast(new JobMove(ogiq.get(j).gPosition,-1, -1, 0, 0,0,0));
+				jobQueue.addLast(new JobTake(ogiq.get(j).gPosition,-1,-1,0,0,0f,0f,ogiq.get(j),null));
+			}
+		}
+
+		cj.setCurrentProgress(cj.getMaxProgress());	
+		
+		
+		/*
+		 * NPC already has the collected item.
+		
+		int count = 0;
+		for(int j=0;j<cj.collectItemQueue.size;j++){
+			if(this.hasItem(cj.collectItemQueue.get(j))){
+				count+=1;
+			}
+		}
+		
+		if(count==cj.collectItemQueue.size){
+			cj.setCurrentProgress(cj.getMaxProgress());	
+		}
+		else{
+			cj.setCurrentProgress((count*1.0f)/cj.collectItemQueue.size* cj.getMaxProgress());	
+		}
+		*/
+		
+    }
     private int determineTakingItemNumber(){
     	return getRandom().nextInt(3)+1;
     }
@@ -548,14 +644,14 @@ public class ObjectNPC extends ObjectAbstract{
     			Gdx.app.log("NPC"+this.id+"_JOB:"+i, this.jobQueue.get(i).getClass()+""+this.jobQueue.get(i));
     		}
     	}
-    	/*
+    	
     	for(int i=0;i<this.needQueue.size;i++){
     		Gdx.app.log("NPC"+this.id+"_NEED"+this.needQueue.get(i).id, this.needQueue.get(i).displayName+" : "+this.needQueue.get(i).currentLevel+"/"+this.needQueue.get(i).maxLevel+" InQueue : "+this.needQueue.get(i).handledInQueue+"niq : "+this.needQueue.get(i).neededItemQueue.size);
     	}
     	for(int i=0;i<this.itemQueue.size;i++){
     		Gdx.app.log("NPC"+this.id+"_ITEM"+this.itemQueue.get(i).getId(),"snum : "+this.itemQueue.get(i).getStack_number());
     	}
-    	*/
+    	
 
     	Gdx.app.log("NPC"+this.id+"_BASE ", this.getBaseEnergyConsumption()+"");
 	}

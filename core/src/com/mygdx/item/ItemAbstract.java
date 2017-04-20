@@ -64,11 +64,13 @@ public class ItemAbstract extends ObjectAbstract {
 		this.maxAgeTick = 100;
 		this.destroyedItem = null;
 		
-		this.font = new BitmapFont(); 
+
+        xOffset = this.texture_default_size*0.5f;
+        yOffset = this.texture_default_size*0.5f;
 		
-    	texture = new Texture("item/"+id+".png");
-        xOffset = this.texture.getWidth()*0.5f;
-        yOffset = this.texture.getHeight()*0.5f;
+    	//texture = new Texture("item/"+id+".png");
+        //xOffset = this.texture.getWidth()*0.5f;
+        //yOffset = this.texture.getHeight()*0.5f;
 	}
 	public String getDisplayName(){
 		return this.name+" x "+this.getStack_number();

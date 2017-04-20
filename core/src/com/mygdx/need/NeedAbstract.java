@@ -9,6 +9,7 @@ public abstract class NeedAbstract {
 	public static final int NEED_FATIGUE_ID = 0;
 	public static final int NEED_HUNGER_ID = 1;
 	public static final int NEED_THIRST_ID = 2;
+	public static final int NEED_JOB_ID = 3;
 	public int id;
 	public String displayName;
 	public float searchRadius;

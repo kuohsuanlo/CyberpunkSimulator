@@ -6,7 +6,9 @@ import com.badlogic.gdx.utils.Queue;
 import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
+import com.mygdx.item.ItemFood;
 import com.mygdx.job.JobAbstract;
+import com.mygdx.job.JobCollect;
 import com.mygdx.job.JobConsume;
 import com.mygdx.job.JobMove;
 import com.mygdx.job.JobRest;
@@ -14,6 +16,7 @@ import com.mygdx.job.JobTake;
 import com.mygdx.need.NeedAbstract;
 import com.mygdx.need.NeedFatigue;
 import com.mygdx.need.NeedHunger;
+import com.mygdx.need.NeedJob;
 import com.mygdx.need.NeedThirst;
 
 public class ThreadNpcAI extends Thread{
@@ -47,8 +50,29 @@ public class ThreadNpcAI extends Thread{
     		oq.npc.recoverBody(oq.npc.getBaseEnergyConsumption()*0.5f);
     	}
 	}
+	
+	/*
+	 * QJA is in 0,1,2,3 order.
+	 * addJobBundleFirst : added by addFirst(3,2,1,0). Inverse
+	 * addJobBundleLast  : added by addLast (0,1,2,3)
+	 * 
+	private void addJobBundleFirst(Queue<JobAbstract> npc_qja, Queue<JobAbstract> qja){
+		for(int i=qja.size-1;i>=0;i--){
+			npc_qja.addFirst(qja.get(i));
+		}
+		
+	}
+	private void addJobBundleLast(Queue<JobAbstract> npc_qja, Queue<JobAbstract> qja){
+		for(int i=0;i<qja.size;i++){
+			npc_qja.addLast(qja.get(i));
+		}
+	}
+	*/
 	private void processCheckNeed(ObjectRequest oq){
-
+		/*
+		 * Because jobs driven by need should be placed before profession. (addFirst instead of addLast)
+		 * TODO : It actually should be driven by NPC's characteristics, but now let's make it this way.
+		 */
 		
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
 		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
@@ -70,6 +94,8 @@ public class ThreadNpcAI extends Thread{
 				ItemAbstract onGroundItem ;
 				ItemAbstract goal;
 				
+				
+
 				//NPC has no idea where the item is
 				if(needQueue.get(i).neededItemQueue.size==0 ){
 					//find it on NPC body
@@ -77,22 +103,26 @@ public class ThreadNpcAI extends Thread{
 					
 					//found
 					if(onBodyItem!=null){
-						needQueue.get(i).neededItemQueue.addLast(onBodyItem);
+						needQueue.get(i).neededItemQueue.addFirst(onBodyItem);
 					}
 					//not found
 					else{
 						//find it on the ground
-						onGroundItem = oq.npc.findItemOnGround(needQueue.get(i));
+						onGroundItem = oq.npc.findItemForNeedOnGround(needQueue.get(i));
 						
 						//found 
 						if(onGroundItem!=null){
     	    				if (!needQueue.get(i).handledInQueue){
     	    					goal = onGroundItem;
-    	    					jobQueue.addLast(new JobMove(goal.gPosition,-1, -1, 0, 0,0,0));
+    	    					JobMove jm = new JobMove(goal.gPosition,-1, -1, 0, 0,0,0);
     	    					JobConsume pendingCJ = new JobConsume(goal.gPosition,m,m-c,0,0,0f,0f,null);
+    	    					JobTake jt = new JobTake(goal.gPosition,-1,-1,goal.getDecreasedNeed_id(),0,0f,0f,goal,pendingCJ);
+
+    	    					//Inverse Order;
+    	    					jobQueue.addFirst(jt);
+    	    					jobQueue.addFirst(pendingCJ);
+    	    					jobQueue.addFirst(jm);
     	    					
-    	    					jobQueue.addLast(new JobTake(goal.gPosition,-1,-1,goal.getDecreasedNeed_id(),0,0f,0f,goal,pendingCJ));
-    	        				jobQueue.addLast(pendingCJ);
     	        				needQueue.get(i).handledInQueue = true;
     	    				}
 						}
@@ -117,6 +147,18 @@ public class ThreadNpcAI extends Thread{
     				}
 				}
     		}
+			else if( needQueue.get(i) instanceof NeedJob){
+				if (!needQueue.get(i).handledInQueue){
+		    		
+					/*
+					 * Making the NeedJob into actually JobAbstract such as JobCollect, 
+					 * and it will be done in doJob() later. 
+					 */
+					oq.npc.getJobQueue().addLast( (JobCollect)((NeedJob)needQueue.get(i)).neededJob);
+					Gdx.app.log("NJOB","NeededJob to jobQueue");
+					needQueue.get(i).handledInQueue = true;
+				}
+			}
     	}
 	}
 	private void processUpdatePersonalAbilities(ObjectRequest oq){
@@ -131,12 +173,41 @@ public class ThreadNpcAI extends Thread{
 		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime());
 	}
 	private void processDecideJob(ObjectRequest oq){
-		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
-    	if(jobQueue.size==0){
-    		float x_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getWidth();
-    		float y_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getHeight();
-        	jobQueue.addLast(new JobMove(new Vector2(x_d,y_d),-1, -1, 0, 0,0,0));
-    	}
+		int jobType = oq.npc.getRandom().nextInt(10);
+		if(jobType ==0){
+			Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
+	    	if(jobQueue.size==0){
+	    		float x_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getWidth();
+	    		float y_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getHeight();
+	        	jobQueue.addLast(new JobMove(new Vector2(x_d,y_d),-1, -1, 0, 0,0,0));
+	    	}
+		}
+		else{
+			/*
+			 * Dummy job for testing collecting item.
+			 * NPC's job makes NPC to collect food. 
+			 * 
+			 * Dummy job : find 5 food items.
+			 */
+			Queue<ItemAbstract> ciq = new Queue<ItemAbstract>();
+			ciq.addFirst(new ItemAbstract(3,null,0,"",100,0,0,0,0,null));
+			JobCollect jc = new JobCollect(oq.npc.gPosition,-1, -1, 0, 0,0,0,ciq);
+
+			/*
+			 * If this NPC has a NeedJob in queue. Ignore the mission. 
+			 * TODO : This function could be extends as a maximum mission in Queue<> missionQueue
+			 */
+			for(int i=0;i<oq.npc.getNeedQueue().size;i++){
+				if(oq.npc.getNeedQueue().get(i) instanceof NeedJob){
+					((NeedJob)oq.npc.getNeedQueue().get(i)).neededJob = jc;
+					Gdx.app.log("NJOB","aiq");
+					return;
+				}
+				
+			}
+			
+		}
+
 	}
 	public boolean addRequest(ObjectNPC onpc, int type){
 		if(this.npcr_queue.size>=requestQueueMax){

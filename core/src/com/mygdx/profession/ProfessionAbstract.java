@@ -2,7 +2,6 @@ package com.mygdx.profession;
 
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.game.ObjectAbstract;
-import com.mygdx.item.ItemAbstract;
 import com.mygdx.job.JobAbstract;
 
 public abstract class ProfessionAbstract {
@@ -14,7 +13,7 @@ public abstract class ProfessionAbstract {
 	 * 4. produceServiceFollowing		: act like a body guard, an assassin, or stalker to gather information
 	 * 
 	 * These function will assign a specific series of job(s) into one's job queue.
-	 * Profession specification could be look up in GURPS Cyberpunk book from page.8 - page.18.
+	 * Profession specification could be look up in GURPS-Cyberpunk book from page.8 - page.18.
 	 * 
 	 * Still, one character shouldn't be restricted to his or her profession, including the NPCs. 
 	 * A profession should act like a knowledge base. One character could have more than one (and zero) profession.
@@ -26,6 +25,13 @@ public abstract class ProfessionAbstract {
 	private String[] professionLevelTitle;
 	private String professionName;
 	
+	/*
+	 * These jobs in the queue will be calculated as this profession's related jobs, 
+	 * which will increase the professon's point by calling addProfessionPoints();
+	 * 
+	 * Notice that JobAbstract's comparator is specified for profession's related jobs testing, 
+	 * so the comparator is different from ItemAbstract's.
+	 */
 	private Queue<JobAbstract> professionJobQueue;
 	
 	public abstract void produceItem();
