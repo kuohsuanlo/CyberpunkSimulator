@@ -11,7 +11,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.job.*;
-
+import com.mygdx.mission.MissionAbstract;
 import com.mygdx.need.*;
 import com.mygdx.util.ThreadNpcAI;
 
@@ -235,7 +235,10 @@ public class ObjectNPC extends ObjectAbstract{
     		JobTake tj = (JobTake) this.cjob;
     		this.takeItem(tj);
     	}
-    	
+    	else if(this.cjob instanceof JobProduce){
+    		JobProduce pj = (JobProduce) this.cjob;
+    		this.produceItem(pj);
+    	}
     	//check progress
     	if(this.checkJobDone(this.cjob)){
     		this.jobConsequence(this.cjob);
@@ -264,6 +267,49 @@ public class ObjectNPC extends ObjectAbstract{
     		jb.getdrivenNeed().handledBatchInQueue=false;
     	}
     }
+    private void jobConsequence(JobAbstract ja){
+    	/*
+    	 * Consequences of Job itself (handledInQueue checked by behavior itself)
+    	 */
+    	if(ja.getDecreasedNeed()!=null){
+    		if(!ja.isJobAborted()){
+        		ja.getDecreasedNeed().addNeed(ja.getDecreaseNeed_amount()*-1);
+        	}
+    	}
+    	/*
+    	 * Side-effect of the item (not the purpose of enqueue) 
+    	 */
+    	if(ja.getIncreasedNeed()!=null){
+    		if(!ja.isJobAborted()){
+        		ja.getIncreasedNeed().addNeed(ja.getIncreaseNeed_amount());
+        	}
+    	}
+    	/*
+    	 * Reducing the number of used, consumed items.  (handledInQueue checked by item itself)
+    	 * And get the destroyed item, such as water into empty bottle.
+    	 */
+    	if(ja instanceof JobConsume){
+    		if(!ja.isJobAborted()){
+        		ItemAbstract Itmp = null;
+        		ItemAbstract IDtmp =null;
+        		Itmp = ((JobConsume) ja).consumedItem;
+        		if(Itmp!=null  &&  Itmp.hasDestroyedItem()){
+        			IDtmp = Itmp.getOneDestroyedItem();
+        		}
+    			if(IDtmp!=null){
+        			this.obtainItem(IDtmp);
+    			}
+    			Itmp.setStack_number(Itmp.getStack_number() - 1);
+    		}
+    	}
+    	/*
+    	 * Taking item is an instant behavior, the number of items are reduced when splitting the item stack.
+    	 * It is not the NPC's conseqence. So we don't reduce the number here. 
+    	 */
+    	else if(ja instanceof JobTake){
+    	}
+    }
+    
     public boolean checkJobDone(JobAbstract ja){
     	if(ja instanceof JobMove){
     		if(this.gPosition.dst(ja.getPosition())<=1){
@@ -381,7 +427,7 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     	
     	
-    	return null;
+    	return candidates;
     }
     private ItemAbstract findItemForNeed(Queue<ItemAbstract> q, int NEED_ID){
     	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
@@ -435,57 +481,7 @@ public class ObjectNPC extends ObjectAbstract{
     	return false;
     }
     
-    private void jobConsequence(JobAbstract ja){
-    	
-    	/*
-    	 * Consequences of Job itself (handledInQueue checked by behavior itself)
-    	 */
-    	if(ja.getDecreasedNeed()!=null){
-    		if(!ja.isJobAborted()){
-        		ja.getDecreasedNeed().addNeed(ja.getDecreaseNeed_amount()*-1);
-        	}
-    	}
-    	
-    	/*
-    	 * Side-effect of the item (not the purpose of enqueue) 
-    	 */
-    	if(ja.getIncreasedNeed()!=null){
-    		if(!ja.isJobAborted()){
-        		ja.getIncreasedNeed().addNeed(ja.getIncreaseNeed_amount());
-        	}
-    	}
-    	
-		
-    	/*
-    	 * Reducing the number of used, consumed items.  (handledInQueue checked by item itself)
-    	 * And get the destroyed item, such as water into empty bottle.
-    	 */
-    	if(ja instanceof JobConsume){
-    		if(!ja.isJobAborted()){
-        		ItemAbstract Itmp = null;
-        		ItemAbstract IDtmp =null;
-        		
-        		Itmp = ((JobConsume) ja).consumedItem;
-        		if(Itmp!=null  &&  Itmp.hasDestroyedItem()){
-        			IDtmp = Itmp.getOneDestroyedItem();
-        		}
-        		
-    			if(IDtmp!=null){
-        			this.obtainItem(IDtmp);
-    			}
-    			Itmp.setStack_number(Itmp.getStack_number() - 1);
-    		}
-    	}
 
-    	/*
-    	 * Taking item is an instant behavior, the number of items are reduced when splitting the item stack.
-    	 * It is not the NPC's conseqence. So we don't reduce the number here. 
-    	 */
-    	else if(ja instanceof JobTake){
-    		
-    	}
-    	
-    }
     public void walkOneTick(JobMove mj){
     	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed(this.getBaseEnergyConsumption());
     	Vector2 vtmp = new Vector2(mj.getPosition().x - this.gPosition.x, mj.getPosition().y - this.gPosition.y);
@@ -525,7 +521,26 @@ public class ObjectNPC extends ObjectAbstract{
     	cj.setCurrentProgress(cj.getCurrentProgress() + 1);
 	
     }
+    public void produceItem(JobProduce pj){
+    	if(pj.recipe.usedItemQueue==null  ||  pj.recipe.producedItemQueue==null){
+    		pj.setJobAborted(true);
+    		pj.setCurrentProgress(pj.getMaxProgress());
 
+    		return;
+    	}
+    	/*
+    	 * Start producing item. If one of process failed. Abort.
+    	 * It use two queue because the product and material might be multiple items.
+    	 * 
+    	 * We also need recipe here.
+    	 * If recipe ==null, abort, because it might mean that NPC has no knowledge of making it.
+    	 * This fits the game. NPC.getItemRecipe() == null;
+    	 * TODO : 
+    	 */
+    	Begin from here 
+    	
+    	
+    }
     public void takeItem(JobTake tj){
     	if(tj.takenItem==null){
     		tj.setJobAborted(true);

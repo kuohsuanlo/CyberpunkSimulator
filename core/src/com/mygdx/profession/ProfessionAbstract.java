@@ -2,6 +2,7 @@ package com.mygdx.profession;
 
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.game.ObjectAbstract;
+import com.mygdx.game.ObjectNPC;
 import com.mygdx.job.JobAbstract;
 
 public abstract class ProfessionAbstract {
@@ -19,6 +20,7 @@ public abstract class ProfessionAbstract {
 	 * A profession should act like a knowledge base. One character could have more than one (and zero) profession.
 	 * A profession itself would have a skill point 0-1000.
 	 */
+	private ObjectNPC owner=null;
 	private int currentLevel=0;
 	private float professionPoints =0;
 	private float[] professionLevelThreshold = {0,250,500,750,1000};
@@ -33,13 +35,20 @@ public abstract class ProfessionAbstract {
 	 * so the comparator is different from ItemAbstract's.
 	 */
 	private Queue<JobAbstract> professionJobQueue;
+
 	
+	/*
+	 * These functions are possible mission that a NPC might do when possess this profession.
+	 * 
+	 * 
+	 */
 	public abstract void produceItem();
 	public abstract void produceServiceEffect(ObjectAbstract oa);
 	public abstract void produceServiceManagement(ObjectAbstract oa);
 	public abstract void produceServiceFollowing(ObjectAbstract oa);
 
-	public ProfessionAbstract(float professionPoints,String professionName,  String[] professionLevelTitle , Queue<JobAbstract> professionJobQueue){
+	public ProfessionAbstract(ObjectNPC owner, float professionPoints,String professionName,  String[] professionLevelTitle , Queue<JobAbstract> professionJobQueue){
+		this.owner = owner;
 		this.professionPoints = professionPoints;
 		this.professionName = professionName;
 		this.professionLevelTitle = professionLevelTitle;
@@ -61,6 +70,9 @@ public abstract class ProfessionAbstract {
 		}
 		
 		this.calProfessionLevel();
+	}
+	public ObjectNPC getOwner(){
+		return this.owner;
 	}
 	public float getProfessionPoints(){
 		return this.professionPoints;

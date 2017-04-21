@@ -3,6 +3,7 @@ package com.mygdx.job;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.ItemAbstract;
+import com.mygdx.mission.MissionAbstract;
 import com.mygdx.need.NeedAbstract;
 
 public abstract class JobAbstract {
@@ -14,8 +15,19 @@ public abstract class JobAbstract {
 	private NeedAbstract increasedNeed;
 	private float decreaseNeed_amount;
 	private float increaseNeed_amount;
+	
+	private MissionAbstract mission;
+
 	private boolean jobAborted;
 	private boolean jobDone;
+	
+	public JobAbstract(Vector2 position, float maxProgress, float currentProgress, MissionAbstract mission) {
+		super();
+		this.setPosition(position);
+		this.setMaxProgress(maxProgress);
+		this.setCurrentProgress(currentProgress);
+		this.setMission(mission); 
+	}
 	public JobAbstract(Vector2 position, float maxProgress, float currentProgress, NeedAbstract decreasedNeed,
 			NeedAbstract increasedNeed, float decreaseNeed_amount, float increaseNeed_amount) {
 		super();
@@ -33,23 +45,7 @@ public abstract class JobAbstract {
 	public abstract boolean compareJobAbstract(JobAbstract ja);
 	
 	
-	public boolean compareItemQueue(Queue<ItemAbstract> ia1, Queue<ItemAbstract> ia2){
-		if(ia1==null || ia2==null) return false;
-		
-		int counter = 0;
-		for(int i=0;i<ia1.size;i++){
-			for(int j=0;j<ia2.size;j++){
-				if(compareItem(ia1.get(i),ia2.get(j))){
-					counter+=1;
-				}
-			}
-		}
-		if(counter==ia1.size  ||  counter==ia2.size){
-			return true;
-		}
-		
-		return false;
-	}
+
 	public boolean compareItem(ItemAbstract ia1, ItemAbstract ia2){
 		return (ia1.getId()==ia2.getId());
 	}
@@ -70,7 +66,12 @@ public abstract class JobAbstract {
 		return currentProgress;
 	}
 	public void setCurrentProgress(float currentProgress) {
-		this.currentProgress = currentProgress;
+		if(currentProgress>this.maxProgress){
+			this.currentProgress = this.maxProgress;
+		}
+		else{
+			this.currentProgress = currentProgress;
+		}
 	}
 	public NeedAbstract getDecreasedNeed() {
 		return decreasedNeed;
@@ -108,6 +109,12 @@ public abstract class JobAbstract {
 	}
 	public void setJobDone(boolean jobDone) {
 		this.jobDone = jobDone;
+	}
+	public MissionAbstract getMission() {
+		return mission;
+	}
+	public void setMission(MissionAbstract mission) {
+		this.mission = mission;
 	}
 }
 

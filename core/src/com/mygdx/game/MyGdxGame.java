@@ -30,7 +30,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 30;
+	public static final int npc_number = 1000;
 	public static final int avg_aiq_number = 200;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
@@ -56,7 +56,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		this.initThreadPool();
 		this.initMap();
 		this.initNpc();
-		//this.initItem();
+		this.initItem();
 		this.initModule();
 	}
 	
@@ -77,8 +77,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		this.drawItem();
 		this.drawNpc();
 		
-		this.drawItemFont();
-		this.drawNpcFont();
+		//this.drawItemFont();
+		//this.drawNpcFont();
 		
 		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_queue.size+" / FPS : "+Gdx.graphics.getFramesPerSecond());
 		//Gdx.app.log("FPS",Gdx.graphics.getFramesPerSecond()+"");
