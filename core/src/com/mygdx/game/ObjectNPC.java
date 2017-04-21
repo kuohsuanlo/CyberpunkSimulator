@@ -257,8 +257,11 @@ public class ObjectNPC extends ObjectAbstract{
     	 */
     	if(jb.getdrivenNeed()!=null){
     		if(!jb.isJobBatchAborted()){
-        		jb.getdrivenNeed().handledBatchInQueue=false;
+        		/*
+        		 * Get job batch's consequence 
+        		 */
         	}
+    		jb.getdrivenNeed().handledBatchInQueue=false;
     	}
     }
     public boolean checkJobDone(JobAbstract ja){
