@@ -8,6 +8,7 @@ import com.mygdx.game.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.item.ItemFood;
 import com.mygdx.job.JobAbstract;
+import com.mygdx.job.JobAbstractBatch;
 import com.mygdx.job.JobConsume;
 import com.mygdx.job.JobMove;
 import com.mygdx.job.JobRest;
@@ -73,7 +74,7 @@ public class ThreadNpcAI extends Thread{
 		 */
 		
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
-		Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
+		Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();
 		for(int i=0;i<needQueue.size;i++){
     		float c = needQueue.get(i).currentLevel;
     		float m = needQueue.get(i).maxLevel;
@@ -81,9 +82,11 @@ public class ThreadNpcAI extends Thread{
     		if(c<m) continue; 
 
 			if( needQueue.get(i) instanceof NeedFatigue) {
-				if (!needQueue.get(i).handledInQueue){
-					jobQueue.addFirst( new JobRest(oq.npc.gPosition,m,m-c,needQueue.get(i),null,0f,0f));
-					needQueue.get(i).handledInQueue = true;
+				if (!needQueue.get(i).handledBatchInQueue){
+					JobAbstractBatch jb = new JobAbstractBatch(needQueue.get(i));
+					jb.getBatch().addFirst(new JobRest(oq.npc.gPosition,m,m-c,needQueue.get(i),null,0f,0f));
+					jobBatchQueue.addFirst(jb);
+					needQueue.get(i).handledBatchInQueue = true;
 				}
 			}
 			else if( needQueue.get(i) instanceof NeedHunger  ||  needQueue.get(i) instanceof NeedThirst) {
@@ -111,30 +114,27 @@ public class ThreadNpcAI extends Thread{
 						
 						//found 
 						if(onGroundItem!=null){
-    	    				if (!needQueue.get(i).handledInQueue){
+    	    				if (!needQueue.get(i).handledBatchInQueue){
     	    					goal = onGroundItem;
     	    					JobMove jm = new JobMove(goal.gPosition,-1, -1, null, null,0,0);
     	    					JobConsume pendingCJ = new JobConsume(goal.gPosition,100,0,needQueue.get(i),null,0f,0f,null);
     	    					JobTake jt = new JobTake(goal.gPosition,-1,-1,null,null,0f,0f,goal,pendingCJ);
 
     	    					//Inverse Order;
+
+    	    					JobAbstractBatch jb = new JobAbstractBatch(needQueue.get(i));
+    	    					jb.getBatch().addFirst(pendingCJ);
+    	    					jb.getBatch().addFirst(jt);
+    	    					jb.getBatch().addFirst(jm);
+    	    					jobBatchQueue.addFirst(jb);
     	    					
-    	    					jobQueue.addFirst(pendingCJ);
-    	    					jobQueue.addFirst(jt);
-    	    					jobQueue.addFirst(jm);
-    	    					
-    	    					/*
-    	    					jobQueue.addLast(jm);
-    	    					jobQueue.addLast(jt);
-    	    					jobQueue.addLast(pendingCJ);
-    	    					*/
-    	        				needQueue.get(i).handledInQueue = true;
+    	        				needQueue.get(i).handledBatchInQueue = true;
     	    				}
 						}
 						//not found, screw the NPC. Ignore the need.
 						else{
 							//no item to solve the need. Let's rest (ignore) and see.
-							if (!needQueue.get(i).handledInQueue){
+							if (!needQueue.get(i).handledBatchInQueue){
 								
 		    				}
 						}
@@ -144,11 +144,14 @@ public class ThreadNpcAI extends Thread{
 				else{
 					onBodyItem = needQueue.get(i).neededItemQueue.first();
     				//just on NPC body
-    				if (!needQueue.get(i).handledInQueue){
+    				if (!needQueue.get(i).handledBatchInQueue){
     					goal = needQueue.get(i).neededItemQueue.first();
     					goal.gPosition = oq.npc.gPosition;
-        				jobQueue.addFirst( new JobConsume(goal.gPosition,100,0,needQueue.get(i),null,0f,0f,goal));
-        				needQueue.get(i).handledInQueue = true;
+        				
+        				JobAbstractBatch jb = new JobAbstractBatch(needQueue.get(i));
+    					jb.getBatch().addFirst( new JobConsume(goal.gPosition,100,0,needQueue.get(i),null,0f,0f,goal));
+    					jobBatchQueue.addFirst(jb);
+        				needQueue.get(i).handledBatchInQueue = true;
     				}
 				}
     		}
@@ -163,17 +166,19 @@ public class ThreadNpcAI extends Thread{
 			baseEC_tmp+=(oq.npc.getBpTraits()[i].traits.str+oq.npc.getBpTraits()[i].traits.vit);
 		}
 		oq.npc.setSpeed(speed_tmp*oq.npc.getSpeedBase());
-		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime()*(1f/2));
+		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime()*(3f));
 	}
 	private void processDecideJob(ObjectRequest oq){
 		
 		int jobType = 0;//oq.npc.getRandom().nextInt(1);
 		if(jobType ==0){
-			Queue<JobAbstract> jobQueue = oq.npc.getJobQueue();
-	    	if(jobQueue.size==0){
+			Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();
+	    	if(jobBatchQueue.size==0){
 	    		float x_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getWidth();
 	    		float y_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getHeight();
-	        	jobQueue.addLast(new JobMove(new Vector2(x_d,y_d),-1, -1, null, null,0,0));
+	    		JobAbstractBatch jb = new JobAbstractBatch(null);
+				jb.getBatch().addLast(new JobMove(new Vector2(x_d,y_d),-1, -1, null, null,0,0));
+				jobBatchQueue.addLast(jb);
 	    	}
 		}
 		else{

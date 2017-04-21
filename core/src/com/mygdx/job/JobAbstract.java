@@ -15,6 +15,7 @@ public abstract class JobAbstract {
 	private float decreaseNeed_amount;
 	private float increaseNeed_amount;
 	private boolean jobAborted;
+	private boolean jobDone;
 	public JobAbstract(Vector2 position, float maxProgress, float currentProgress, NeedAbstract decreasedNeed,
 			NeedAbstract increasedNeed, float decreaseNeed_amount, float increaseNeed_amount) {
 		super();
@@ -26,6 +27,8 @@ public abstract class JobAbstract {
 		this.setDecreaseNeed_amount(decreaseNeed_amount);
 		this.setIncreaseNeed_amount(increaseNeed_amount);
 		this.setJobAborted(false);
+		this.setJobDone(false);
+	
 	}
 	public abstract boolean compareJobAbstract(JobAbstract ja);
 	
@@ -98,6 +101,13 @@ public abstract class JobAbstract {
 	}
 	public void setJobAborted(boolean jobAborted) {
 		this.jobAborted = jobAborted;
+	}
+
+	public boolean isJobDone() {
+		return jobDone;
+	}
+	public void setJobDone(boolean jobDone) {
+		this.jobDone = jobDone;
 	}
 }
 

@@ -50,7 +50,7 @@ public class ObjectNPC extends ObjectAbstract{
      */
     private Queue<ItemAbstract> itemQueue;
     private Queue<NeedAbstract> needQueue;
-    private Queue<JobAbstract> jobQueue;
+    private Queue<JobAbstractBatch> jobBatchQueue;
     private JobAbstract cjob;
    
     /*
@@ -80,7 +80,7 @@ public class ObjectNPC extends ObjectAbstract{
         yOffset = this.texture.getHeight()*0.5f;
     	
         itemQueue = new Queue<ItemAbstract>();
-    	jobQueue = new Queue<JobAbstract>();
+        jobBatchQueue = new Queue<JobAbstractBatch>();
     	needQueue = new Queue<NeedAbstract>();
     	bpTraits = new ObjectBodyPart[bpNumber];
     	
@@ -157,8 +157,8 @@ public class ObjectNPC extends ObjectAbstract{
 	}
     private void initNeed(){
     	needQueue.addLast( (NeedAbstract)new NeedFatigue("fatigue",0,0,random.nextInt(Math.round(getNeedMax(NeedAbstract.NEED_FATIGUE_ID))),getNeedMax(NeedAbstract.NEED_FATIGUE_ID),null,null) );
-    	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,0,random.nextInt(Math.round(getNeedMax(NeedAbstract.NEED_HUNGER_ID))),getNeedMax(NeedAbstract.NEED_HUNGER_ID),null,null) );
-    	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0,random.nextInt(Math.round(getNeedMax(NeedAbstract.NEED_THIRST_ID))),getNeedMax(NeedAbstract.NEED_THIRST_ID),null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedHunger("hunger",0,0,getNeedMax(NeedAbstract.NEED_HUNGER_ID),getNeedMax(NeedAbstract.NEED_HUNGER_ID),null,null) );
+    	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0,getNeedMax(NeedAbstract.NEED_THIRST_ID),getNeedMax(NeedAbstract.NEED_THIRST_ID),null,null) );
     }
 	private float getNeedMax(int type){
 		float base_tmp=0;
@@ -210,12 +210,15 @@ public class ObjectNPC extends ObjectAbstract{
     }
     private void doJob(){
     	//get first job(current)
-    	if(jobQueue.size==0){
+    	if(jobBatchQueue.size==0){
     		return;
     	}
     	
     	//do job
-    	this.cjob = jobQueue.first();
+    	this.cjob = jobBatchQueue.first().getFirstUndoneJob();
+    	
+    	if(cjob==null) return;
+    	
     	if(this.cjob instanceof JobMove){
     		JobMove mj = (JobMove)this.cjob;
     		this.walkOneTick(mj);
@@ -236,10 +239,51 @@ public class ObjectNPC extends ObjectAbstract{
     	//check progress
     	if(this.checkJobDone(this.cjob)){
     		this.jobConsequence(this.cjob);
-    		jobQueue.removeFirst();
-    		this.cjob=null;
+    		this.cjob.setJobDone(true);
     	}
     	
+    	/*
+    	 * The consequences of a job batch, probably like the salary earned after picking 5 trash on road.
+    	 */
+    	if(jobBatchQueue.first().isJobBatchDone()){
+    		this.jobBatchConsequence(jobBatchQueue.first());
+    		jobBatchQueue.removeFirst();
+    	}
+    	
+    }
+    private void jobBatchConsequence(JobAbstractBatch jb){
+    	/*
+    	 * Consequences of Job itself (handledInQueue checked by behavior itself)
+    	 */
+    	if(jb.getdrivenNeed()!=null){
+    		if(!jb.isJobBatchAborted()){
+        		jb.getdrivenNeed().handledBatchInQueue=false;
+        	}
+    	}
+    }
+    public boolean checkJobDone(JobAbstract ja){
+    	if(ja instanceof JobMove){
+    		if(this.gPosition.dst(ja.getPosition())<=1){
+				return true;
+    		}
+    	}
+    	else if(ja instanceof JobRest){
+			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
+				return true;	
+			}
+    	}
+    	else if(ja instanceof JobConsume){
+			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
+				return true;	
+			}
+    	}
+    	else if(ja instanceof JobTake){
+			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
+				return true;	
+			}
+    	}
+    	
+    	return false;
     }
     private void refreshQueue(){
     	Queue<ItemAbstract> tmpQ;
@@ -378,30 +422,7 @@ public class ObjectNPC extends ObjectAbstract{
     		}
     	}
     }
-    public boolean checkJobDone(JobAbstract ja){
-    	if(ja instanceof JobMove){
-    		if(this.gPosition.dst(ja.getPosition())<=1){
-				return true;
-    		}
-    	}
-    	else if(ja instanceof JobRest){
-			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
-				return true;	
-			}
-    	}
-    	else if(ja instanceof JobConsume){
-			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
-				return true;	
-			}
-    	}
-    	else if(ja instanceof JobTake){
-			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
-				return true;	
-			}
-    	}
-    	
-    	return false;
-    }
+
     public boolean hasItem(ItemAbstract ia){
     	for(int i=0;i<this.itemQueue.size;i++){
     		if(this.itemQueue.get(i).getStack_number()>=ia.getStack_number()){
@@ -420,7 +441,6 @@ public class ObjectNPC extends ObjectAbstract{
     		if(!ja.isJobAborted()){
         		ja.getDecreasedNeed().addNeed(ja.getDecreaseNeed_amount()*-1);
         	}
-    		ja.getDecreasedNeed().handledInQueue=false;
     	}
     	
     	/*
@@ -564,16 +584,23 @@ public class ObjectNPC extends ObjectAbstract{
 			String Stmp = "";
 			int line =0;
 			for(int i=0;i<this.needQueue.size;i++){
-				if(this.needQueue.get(i).handledInQueue)
+				if(this.needQueue.get(i).handledBatchInQueue)
 					Stmp+="+";
 				else
 					Stmp+="-";
-				Stmp+= this.needQueue.get(i).displayName+" : "+Math.round(this.needQueue.get(i).currentLevel)+"/"+Math.round(this.needQueue.get(i).maxLevel);
+				Stmp+= this.needQueue.get(i).getDisplayName()+" : "+Math.round(this.needQueue.get(i).currentLevel)+"/"+Math.round(this.needQueue.get(i).maxLevel);
 				Stmp+="\n";
 				line+=1;
 			}	
 			for(int i=0;i<this.itemQueue.size;i++){
 				Stmp+=this.itemQueue.get(i).getDisplayName();
+				Stmp+="\n";
+				line+=1;
+			}
+			for(int i=0;i<this.jobBatchQueue.size;i++){
+				
+				Stmp+=(this.jobBatchQueue.get(i).getDisplayName());
+				
 				Stmp+="\n";
 				line+=1;
 			}
@@ -586,22 +613,26 @@ public class ObjectNPC extends ObjectAbstract{
 
 	}
 	private void printSelfInfo(){
-    	Gdx.app.log("NPC"+this.id+"_JOB ", this.jobQueue.size+"/"+this.cjob);
-    	for(int i=0;i<this.jobQueue.size;i++){
-    		if(this.jobQueue.get(i) instanceof JobConsume){
-    			JobConsume jc = (JobConsume)this.jobQueue.get(i);
-    			if(jc.consumedItem==null)
-    				Gdx.app.log("NPC"+this.id+"_JOB:"+i, "CONSUME NULL");
-    			else
-    				Gdx.app.log("NPC"+this.id+"_JOB:"+i, "CONSUME "+jc.consumedItem.getDisplayName()+""+this.jobQueue.get(i));
-    		}
-    		else{
-    			Gdx.app.log("NPC"+this.id+"_JOB:"+i, this.jobQueue.get(i).getClass()+""+this.jobQueue.get(i));
-    		}
+    	Gdx.app.log("NPC"+this.id+"_JOB ", this.jobBatchQueue.size+"/"+this.cjob);
+    	for(int q=0;q<this.jobBatchQueue.size;q++){
+    		JobAbstractBatch jb = this.jobBatchQueue.get(q);
+        	for(int i=0;i<jb.getBatch().size;i++){
+        		if(jb.getBatch().get(i) instanceof JobConsume){
+        			JobConsume jc = (JobConsume)jb.getBatch().get(i);
+        			if(jc.consumedItem==null)
+        				Gdx.app.log("NPC"+this.id+"_JOB:"+i, "CONSUME NULL");
+        			else
+        				Gdx.app.log("NPC"+this.id+"_JOB:"+i, "CONSUME "+jc.consumedItem.getDisplayName()+""+jb.getBatch().get(i));
+        		}
+        		else{
+        			Gdx.app.log("NPC"+this.id+"_JOB:"+i, jb.getBatch().get(i).getClass()+""+jb.getBatch().get(i));
+        		}
+        	}
     	}
+
     	
     	for(int i=0;i<this.needQueue.size;i++){
-    		Gdx.app.log("NPC"+this.id+"_NEED"+this.needQueue.get(i).id, this.needQueue.get(i).displayName+" : "+this.needQueue.get(i).currentLevel+"/"+this.needQueue.get(i).maxLevel+" InQueue : "+this.needQueue.get(i).handledInQueue+"niq : "+this.needQueue.get(i).neededItemQueue.size);
+    		Gdx.app.log("NPC"+this.id+"_NEED"+this.needQueue.get(i).id, this.needQueue.get(i).getDisplayName()+" : "+this.needQueue.get(i).currentLevel+"/"+this.needQueue.get(i).maxLevel+" InQueue : "+this.needQueue.get(i).handledBatchInQueue+"nitem qsize : "+this.needQueue.get(i).neededItemQueue.size);
     	}
     	for(int i=0;i<this.itemQueue.size;i++){
     		Gdx.app.log("NPC"+this.id+"_ITEM"+this.itemQueue.get(i).getId(),"snum : "+this.itemQueue.get(i).getStack_number());
@@ -658,8 +689,8 @@ public class ObjectNPC extends ObjectAbstract{
 		return this.needQueue;
 	}
 
-	public Queue<JobAbstract> getJobQueue(){
-		return this.jobQueue;
+	public Queue<JobAbstractBatch> getJobBatchQueue(){
+		return this.jobBatchQueue;
 	}
 
 	public Queue<ItemAbstract> getItemQueue(){

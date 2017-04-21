@@ -1,6 +1,7 @@
 package com.mygdx.job;
 
 import com.badlogic.gdx.math.Vector2;
+import com.mygdx.game.ObjectNPC;
 import com.mygdx.need.NeedAbstract;
 
 public class JobMove extends JobAbstract{

@@ -30,7 +30,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 3;
+	public static final int npc_number = 30;
 	public static final int avg_aiq_number = 200;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
@@ -48,13 +48,15 @@ public class MyGdxGame extends ApplicationAdapter {
 	private int threadnpc_pool_number;
 	private Random random = new Random();
 	
+	private boolean gamePause;
+	
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
 		this.initThreadPool();
 		this.initMap();
 		this.initNpc();
-		this.initItem();
+		//this.initItem();
 		this.initModule();
 	}
 	
@@ -67,10 +69,11 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
 		//this.drawTerrain();
-		
-		this.callItem();
-		this.callNpc();
-		
+		if(!this.gamePause){
+			this.callItem();
+			this.callNpc();
+			
+		}
 		this.drawItem();
 		this.drawNpc();
 		
@@ -92,6 +95,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.input.setInputProcessor(inputProcessor);
 	}
 	private void initThreadPool(){
+		this.gamePause = false;
 		this.threadnpc_pool_number = Math.max(2, Runtime.getRuntime().availableProcessors());
 		this.threadnpc_pool= new Queue<ThreadNpcAI>();
 		for(int i=0;i<threadnpc_pool_number;i++){
@@ -231,6 +235,14 @@ public class MyGdxGame extends ApplicationAdapter {
 			return this.threadnpc_pool.get(min_idx);
 		}
 	}
+	public boolean isGamePause() {
+		return gamePause;
+	}
+
+
+	public void setGamePause(boolean gamePause) {
+		this.gamePause = gamePause;
+	}
 	public Vector2 s2c(int x, int y){
 		return new Vector2(x,Gdx.graphics.getHeight()-y);
 
@@ -248,14 +260,17 @@ class InGameInputProcessor implements InputProcessor {
     	if (button == Input.Buttons.LEFT) {
     		// Put food (testing)
     		mgg.addRandomItem(mgg.s2c(x, y),1);
-    		return true;     
+    		return true;  
     	}
     	return false;
     }
 
 	@Override
 	public boolean keyDown(int keycode) {
-
+		if (keycode == Input.Keys.SPACE) {
+			mgg.setGamePause(!mgg.isGamePause());
+			return true;  
+		}
 		return false;
 	}
 
@@ -267,8 +282,7 @@ class InGameInputProcessor implements InputProcessor {
 
 	@Override
 	public boolean keyTyped(char character) {
-
-		return false;
+    	return false;
 	}
 
 	@Override

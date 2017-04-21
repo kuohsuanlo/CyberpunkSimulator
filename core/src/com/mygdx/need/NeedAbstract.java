@@ -11,14 +11,14 @@ public abstract class NeedAbstract {
 	public static final int NEED_THIRST_ID = 2;
 	public static final int NEED_JOB_ID = 3;
 	public int id;
-	public String displayName;
 	public float searchRadius;
 	
 	public float tickLevel;
 	public float currentLevel;
 	public float maxLevel;
 	
-	public boolean handledInQueue;
+	public boolean handledBatchInQueue;
+	private String displayName;
 	
 	/*
 	 * NeededItem : It is preferable by this NPC. Or in other words, this item is in this NPC's memory.
@@ -38,7 +38,7 @@ public abstract class NeedAbstract {
 		this.maxLevel = maxLevel;
 		this.neededItemQueue = neededItemQueue;
 		this.neededJobQueue = neededJobQueue;
-		this.handledInQueue = false;
+		this.handledBatchInQueue = false;
 		this.id =NEED_ABSTRACT_ID;
 		this.initQueue();
 	}
@@ -54,7 +54,7 @@ public abstract class NeedAbstract {
 		this.maxLevel = 100;
 		this.neededItemQueue = neededItemQueue;
 		this.neededJobQueue = neededJobQueue;
-		this.handledInQueue = false;
+		this.handledBatchInQueue = false;
 		this.initQueue();
 	}
 	
@@ -85,5 +85,11 @@ public abstract class NeedAbstract {
 		
 		searchRadius= 1000*(currentLevel / maxLevel);;
 
+	}
+	public String getDisplayName(){
+		if(this.displayName==null){
+			this.displayName = "not defined";
+		}
+		return this.displayName;
 	}
 }
