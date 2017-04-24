@@ -240,6 +240,10 @@ public class ObjectNPC extends ObjectAbstract{
         		JobTake tj = (JobTake) this.cjob;
         		this.takeItem(tj);
         	}
+        	else if(this.cjob instanceof JobDrop){
+        		JobDrop tj = (JobDrop) this.cjob;
+        		this.dropItem(tj);
+        	}
         	else if(this.cjob instanceof JobProduce){
         		JobProduce pj = (JobProduce) this.cjob;
         		this.produceItem(pj);
@@ -313,14 +317,16 @@ public class ObjectNPC extends ObjectAbstract{
     	 */
     	else if(ja instanceof JobTake){
     		JobTake tj = (JobTake) ja;
-    		ItemAbstract tkItem = tj.takenItem.getTaken(this.determineTakingItemNumber()) ;
-        	this.obtainItem(tkItem);
-        	
-        	//Filling information for the taken item
-        	if(tj.nextPendingJob!=null  && tj.nextPendingJob instanceof JobConsume){
-        		((JobConsume)tj.nextPendingJob).consumedItem=tkItem;
-        		((JobConsume)tj.nextPendingJob).setPosition(this.gPosition);
-        	}
+    		int valid_number = tj.takenItem.getValidNumber(this.determineItemNumber()) ;;
+
+        	this.obtainItem(tj.takenItem.getDup(valid_number));
+        	tj.takenItem.setStack_number(tj.takenItem.getStack_number()-valid_number);
+    	}
+    	else if(ja instanceof JobDrop){
+    		JobDrop dj = (JobDrop) ja;
+    		int valid_number = dj.droppedItem.getValidNumber(this.determineItemNumber()) ;
+    		this.loseItem(dj.droppedItem.getDup(valid_number));
+    		this.game.addItem(dj.droppedItem.getDup(valid_number));
     	}
     	else if(ja instanceof JobProduce){
     		JobProduce pj = (JobProduce) ja;
@@ -328,7 +334,6 @@ public class ObjectNPC extends ObjectAbstract{
         	if(pj.getCurrentProgress()>=pj.getMaxProgress()){
         		for(int i=0;i<pj.recipe.producedItemQueue.size;i++){
             		this.obtainItem(pj.recipe.producedItemQueue.get(i));
-            		Gdx.app.log("ITEM","Produce ingot");
             	}
         		for(int i=0;i<pj.recipe.usedItemQueue.size;i++){
             		this.loseItem(pj.recipe.usedItemQueue.get(i));
@@ -391,7 +396,7 @@ public class ObjectNPC extends ObjectAbstract{
     	//return false;
     	return this.lifeStatus<=0;
     }
-    public ItemAbstract findItemOnBody(NeedAbstract na){
+    public ItemAbstract findItemForNeedOnBody(NeedAbstract na){
     	Queue<ItemAbstract> q = this.itemQueue;
     	if(na instanceof NeedHunger){		
 			//searching item for hunger need
@@ -416,7 +421,8 @@ public class ObjectNPC extends ObjectAbstract{
 		return null;	
 
     }
-    private Queue<ItemAbstract> findItemOnGround(ItemAbstract ia){
+
+    public Queue<ItemAbstract> findItemOnGround(ItemAbstract ia){
     	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
     	Queue<ItemAbstract> q = this.inMap.item_ground;
     	int collectNumberInNeed = ia.getStack_number();
@@ -590,9 +596,30 @@ public class ObjectNPC extends ObjectAbstract{
 
 		tj.setCurrentProgress(tj.getMaxProgress());
     }
-    
+    public void dropItem(JobDrop dj){
+    	if(dj.droppedItem==null){
+    		dj.setJobAborted(true);
+    		dj.setCurrentProgress(dj.getMaxProgress());
+    		return;
+    	}
+    	else if(dj.droppedItem.getStack_number()<=0){
+    		dj.setJobAborted(true);
+    		dj.setCurrentProgress(dj.getMaxProgress());
+    		return;
+    	}
+    	else if(this.hasItem(dj.droppedItem)){
+    		dj.setCurrentProgress(dj.getMaxProgress());
+    		return;
+    	}
+    	else{
+    		dj.setJobAborted(true);
+    		dj.setCurrentProgress(dj.getMaxProgress());
+    		return;
+    	}
+		
+    }
  
-    private int determineTakingItemNumber(){
+    private int determineItemNumber(){
     	return getRandom().nextInt(5)+1;
     }
 	public void renderSelf(SpriteBatch batch) {
@@ -616,6 +643,9 @@ public class ObjectNPC extends ObjectAbstract{
 			}	
 			else if(ja instanceof JobTake){
 				font.draw(batch, "jbt"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
+			}
+			else if(ja instanceof JobTake){
+				font.draw(batch, "jbd"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
 			}
 			else if(ja instanceof JobProduce){
 				font.draw(batch, "prd"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
@@ -665,6 +695,7 @@ public class ObjectNPC extends ObjectAbstract{
 
 	}
 	private void printSelfInfo(){
+    	Gdx.app.log("NPC"+this.id+"_JOB ","---------------");
     	Gdx.app.log("NPC"+this.id+"_JOB ", this.jobBatchQueue.size+"/"+this.cjob);
     	for(int q=0;q<this.jobBatchQueue.size;q++){
     		JobAbstractBatch jb = this.jobBatchQueue.get(q);
@@ -682,16 +713,18 @@ public class ObjectNPC extends ObjectAbstract{
         	}
     	}
 
-    	
+    	/*
     	for(int i=0;i<this.needQueue.size;i++){
     		Gdx.app.log("NPC"+this.id+"_NEED"+this.needQueue.get(i).id, this.needQueue.get(i).getDisplayName()+" : "+this.needQueue.get(i).currentLevel+"/"+this.needQueue.get(i).maxLevel+" InQueue : "+this.needQueue.get(i).handledBatchInQueue+"nitem qsize : "+this.needQueue.get(i).neededItemQueue.size);
     	}
+    	*/
     	for(int i=0;i<this.itemQueue.size;i++){
     		Gdx.app.log("NPC"+this.id+"_ITEM"+this.itemQueue.get(i).getId(),"snum : "+this.itemQueue.get(i).getStack_number());
     	}
     	
 
     	Gdx.app.log("NPC"+this.id+"_BASE ", this.getBaseEnergyConsumption()+"");
+    	
 	}
 
 	public int getBpNumber() {

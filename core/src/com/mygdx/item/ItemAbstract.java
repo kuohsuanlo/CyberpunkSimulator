@@ -1,5 +1,6 @@
 package com.mygdx.item;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -31,8 +32,8 @@ public class ItemAbstract extends ObjectAbstract {
 	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,float decreasedNeed_amount, float increasedNeed_amount, ObjectNPC owner, ItemAbstract destroyedItem) {
 		super();
 		this.setId(id);
-		this.gPosition = gp;
-		this.sPosition = gp;
+		this.gPosition = new Vector2(gp.x,gp.y);
+		this.sPosition = this.gPosition;
 		this.price = price;
 		this.name = name;
 		this.setStack_number(stack_number);
@@ -54,8 +55,8 @@ public class ItemAbstract extends ObjectAbstract {
 	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,float decreasedNeed_amount, float increasedNeed_amount, ObjectNPC owner) {
 		super();
 		this.setId(id);
-		this.gPosition = gp;
-		this.sPosition = gp;
+		this.gPosition = new Vector2(gp.x,gp.y);
+		this.sPosition = this.gPosition;
 		this.price = price;
 		this.name = name;
 		this.setStack_number(stack_number);
@@ -78,15 +79,29 @@ public class ItemAbstract extends ObjectAbstract {
 	public String getDisplayName(){
 		return this.name+" x "+this.getStack_number();
 	}
+	public ItemAbstract getDup(int number){
+		return new ItemAbstract(this.getId(),this.gPosition,this.price,this.name,number,this.getDecreasedNeed_id(),this.getIncreasedNeed_id(),this.getDecreasedNeed_amount(),this.getIncreasedNeed_amount(),null,this.destroyedItem);
+		
+	}
+	public int getValidNumber(int number){
+		if(number<=this.getStack_number()){
+			return number;
+		}
+		else{
+			return this.getStack_number();
+		}
+	}
 	public ItemAbstract getTaken(int number){
 		int tkNumber = this.getStack_number();
 		if(tkNumber>=number){
 			tkNumber = number;
 		}
-		if(this.getStack_number()>=tkNumber){
+		if(this.getStack_number()==0){	
+			return null;
+		}
+		else if(this.getStack_number()>=tkNumber){
 			this.setStack_number(this.getStack_number() - tkNumber);
 			return new ItemAbstract(this.getId(),this.gPosition,this.price,this.name,tkNumber,this.getDecreasedNeed_id(),this.getIncreasedNeed_id(),this.getDecreasedNeed_amount(),this.getIncreasedNeed_amount(),null,this.destroyedItem);
-
 		}
 		return null;
 	}
@@ -95,10 +110,7 @@ public class ItemAbstract extends ObjectAbstract {
 				this.getDecreasedNeed_id() == ia.getDecreasedNeed_id()  &&
 				this.getIncreasedNeed_id() == ia.getIncreasedNeed_id()  &&
 				this.getDecreasedNeed_amount() == ia.getDecreasedNeed_amount()  &&
-				this.getIncreasedNeed_amount() == ia.getIncreasedNeed_amount()  &&
-				this.maxAgeTick == ia.maxAgeTick  &&  
-				this.owner  == ia.owner;
-				
+				this.getIncreasedNeed_amount() == ia.getIncreasedNeed_amount();
 	}
 	public void itemTimePass(){
 		this.rotation=(this.rotation+5)%360;

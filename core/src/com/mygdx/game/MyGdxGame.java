@@ -153,10 +153,13 @@ public class MyGdxGame extends ApplicationAdapter {
 		ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
 		
 		for(int i=0;i<npc_number;i++){
-			item_queue.addFirst(new ItemFood(3,getRandomLoc() ,0,"free bucket",5,0,0,0f,0f,null));
-			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",2,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
-			item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",2,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
+			item_queue.addFirst(new ItemAbstract(3,getRandomLoc() ,0,"free bucket",1,0,0,0f,0f,null));
+			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",0,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
+			item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",0,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
 		}
+	}
+	public void addItem(ItemAbstract ia){
+		item_queue.addFirst(ia);
 	}
 	public void addRandomItem(Vector2 loc, int times){
 		for(int i=0;i<times;i++){
