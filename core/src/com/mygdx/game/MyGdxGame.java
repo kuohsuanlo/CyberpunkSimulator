@@ -35,7 +35,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 10;
+	public static final int npc_number = 1;
 	public static final int avg_aiq_number = 200;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
@@ -153,8 +153,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
 		
 		for(int i=0;i<npc_number;i++){
-			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",100,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
-			item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",100,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
+			item_queue.addFirst(new ItemFood(3,getRandomLoc() ,0,"free bucket",5,0,0,0f,0f,null));
+			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",2,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
+			item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",2,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
 		}
 	}
 	public void addRandomItem(Vector2 loc, int times){

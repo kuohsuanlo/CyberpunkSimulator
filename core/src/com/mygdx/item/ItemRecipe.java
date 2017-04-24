@@ -7,6 +7,10 @@ public class ItemRecipe {
 	public Queue<ItemAbstract> usedItemQueue ;
 	public Queue<ItemAbstract> producedItemQueue;
 	
+	public ItemRecipe(Queue<ItemAbstract> usedItemQueue, Queue<ItemAbstract> producedItemQueue){
+		this.usedItemQueue = usedItemQueue;
+		this.producedItemQueue = producedItemQueue;
+	}
 	public boolean compareRecipe(ItemRecipe ir){
 			return compareItemQueue(this.usedItemQueue,ir.usedItemQueue)  &&
 					compareItemQueue(this.producedItemQueue,ir.producedItemQueue) ;

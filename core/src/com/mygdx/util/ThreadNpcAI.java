@@ -7,10 +7,12 @@ import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.item.ItemFood;
+import com.mygdx.item.ItemRecipe;
 import com.mygdx.job.JobAbstract;
 import com.mygdx.job.JobAbstractBatch;
 import com.mygdx.job.JobConsume;
 import com.mygdx.job.JobMove;
+import com.mygdx.job.JobProduce;
 import com.mygdx.job.JobRest;
 import com.mygdx.job.JobTake;
 import com.mygdx.need.NeedAbstract;
@@ -170,7 +172,7 @@ public class ThreadNpcAI extends Thread{
 	}
 	private void processDecideJob(ObjectRequest oq){
 		
-		int jobType = 0;//oq.npc.getRandom().nextInt(1);
+		int jobType = 1;//oq.npc.getRandom().nextInt(1);
 		if(jobType ==0){
 			Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();
 	    	if(jobBatchQueue.size==0){
@@ -182,6 +184,23 @@ public class ThreadNpcAI extends Thread{
 	    	}
 		}
 		else{
+			Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();
+			Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
+			Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
+			ItemAbstract bucket = new ItemAbstract(3,oq.npc.gPosition,0,"bucket",1,0,0,0f,0f,null);
+			ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"iron_ingot",1,0,0,0f,0f,null);
+			usedItems.addFirst(bucket);
+			producedItems.addFirst(ingot);
+			ItemRecipe recipe_ingot = new ItemRecipe(usedItems, producedItems);
+			
+	    	if(jobBatchQueue.size==0){
+	    		JobAbstractBatch jb = new JobAbstractBatch(null);
+				jb.getBatch().addLast(new JobProduce(oq.npc.gPosition, 100, 0, null, null, 0, 0, recipe_ingot));
+				jobBatchQueue.addLast(jb);
+	    	}
+	    	
+	    	
+	    	
 			/*
 			 * Dummy job for testing collecting item.
 			 * NPC's job makes NPC to collect food. 

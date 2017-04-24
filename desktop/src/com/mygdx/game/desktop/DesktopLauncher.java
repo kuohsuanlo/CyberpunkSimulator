@@ -14,11 +14,11 @@ public class DesktopLauncher {
 		
 	    // TODO: ori2prime (resizing issue)
 	    // TODO: prime2ori (resizing issue)
-		// TODO: progress based on realtime
+		// TODO: progress based on real time passing
 		
 		
 		config.width = 400;
-		config.height = 200;
+		config.height = 400;
 		
 		new LwjglApplication(new MyGdxGame(), config);
 	}

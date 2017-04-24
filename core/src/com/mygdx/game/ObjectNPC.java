@@ -278,36 +278,34 @@ public class ObjectNPC extends ObjectAbstract{
     	/*
     	 * Consequences of Job itself (handledInQueue checked by behavior itself)
     	 */
+    	if(ja.isJobAborted()) return;
+    	
     	if(ja.getDecreasedNeed()!=null){
-    		if(!ja.isJobAborted()){
         		ja.getDecreasedNeed().addNeed(ja.getDecreaseNeed_amount()*-1);
-        	}
     	}
     	/*
     	 * Side-effect of the item (not the purpose of enqueue) 
     	 */
     	if(ja.getIncreasedNeed()!=null){
-    		if(!ja.isJobAborted()){
         		ja.getIncreasedNeed().addNeed(ja.getIncreaseNeed_amount());
-        	}
     	}
     	/*
     	 * Reducing the number of used, consumed items.  (handledInQueue checked by item itself)
     	 * And get the destroyed item, such as water into empty bottle.
     	 */
     	if(ja instanceof JobConsume){
-    		if(!ja.isJobAborted()){
-        		ItemAbstract Itmp = null;
-        		ItemAbstract IDtmp =null;
-        		Itmp = ((JobConsume) ja).consumedItem;
-        		if(Itmp!=null  &&  Itmp.hasDestroyedItem()){
-        			IDtmp = Itmp.getOneDestroyedItem();
-        		}
-    			if(IDtmp!=null){
-        			this.obtainItem(IDtmp);
-    			}
-    			Itmp.setStack_number(Itmp.getStack_number() - 1);
+		
+    		ItemAbstract Itmp = null;
+    		ItemAbstract IDtmp =null;
+    		Itmp = ((JobConsume) ja).consumedItem;
+    		if(Itmp!=null  &&  Itmp.hasDestroyedItem()){
+    			IDtmp = Itmp.getOneDestroyedItem();
     		}
+			if(IDtmp!=null){
+    			this.obtainItem(IDtmp);
+			}
+			Itmp.setStack_number(Itmp.getStack_number() - 1);
+		
     	}
     	/*
     	 * Taking item is an instant behavior, the number of items are reduced when splitting the item stack.
@@ -330,6 +328,10 @@ public class ObjectNPC extends ObjectAbstract{
         	if(pj.getCurrentProgress()>=pj.getMaxProgress()){
         		for(int i=0;i<pj.recipe.producedItemQueue.size;i++){
             		this.obtainItem(pj.recipe.producedItemQueue.get(i));
+            		Gdx.app.log("ITEM","Produce ingot");
+            	}
+        		for(int i=0;i<pj.recipe.usedItemQueue.size;i++){
+            		this.loseItem(pj.recipe.usedItemQueue.get(i));
             	}
         	}
     	}
@@ -487,11 +489,15 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     }
 
+    
     public boolean hasItem(ItemAbstract ia){
     	for(int i=0;i<this.itemQueue.size;i++){
-    		if(this.itemQueue.get(i).getStack_number()>=ia.getStack_number()){
-    			return true;
+    		if( itemQueue.get(i).compareItemAbstract(ia) ){
+    			if(this.itemQueue.get(i).getStack_number()>=ia.getStack_number()){
+        			return true;
+        		}
     		}
+    		
     	}
     	return false;
     }
@@ -556,6 +562,14 @@ public class ObjectNPC extends ObjectAbstract{
     	 */
     	
     	//Producing Items
+    	Queue<ItemAbstract> iaq = pj.recipe.usedItemQueue;
+    	for(int i=0;i<iaq.size;i++){
+    		if(!this.hasItem(iaq.get(i))){
+    			pj.setJobAborted(true);
+        		pj.setCurrentProgress(pj.getMaxProgress());
+        		return;
+    		}
+    	}
     	pj.setCurrentProgress(pj.getCurrentProgress() + 1);
     	
 
@@ -594,20 +608,27 @@ public class ObjectNPC extends ObjectAbstract{
 		String prog ="";
 		if(ja!=null){
 			prog = Math.round(ja.getCurrentProgress())+"/"+Math.round(ja.getMaxProgress());
+			if(ja instanceof JobRest){
+				font.draw(batch, "zzz"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
+			}
+			else if(ja instanceof JobConsume){
+				font.draw(batch, "csm"+prog, ja.getPosition().x,ja.getPosition().y+this.texture.getHeight()*0.5f);
+			}	
+			else if(ja instanceof JobTake){
+				font.draw(batch, "jbt"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
+			}
+			else if(ja instanceof JobProduce){
+				font.draw(batch, "prd"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
+			}
+			else if(ja instanceof JobMove){
+				font.draw(batch, this.id+"", ja.getPosition().x, ja.getPosition().y);
+			}
+		}
+		else{
+			font.draw(batch, "---", this.gPosition.x, this.gPosition.y+this.texture.getHeight()*0.5f);
 		}
 		
-		if(ja instanceof JobRest){
-			font.draw(batch, "zzz"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
-		}
-		else if(ja instanceof JobConsume){
-			font.draw(batch, "csm"+prog, ja.getPosition().x,ja.getPosition().y+this.texture.getHeight()*0.5f);
-		}	
-		else if(ja instanceof JobTake){
-			font.draw(batch, "jbt"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
-		}
-		else if(ja instanceof JobMove){
-			font.draw(batch, this.id+"", ja.getPosition().x, ja.getPosition().y);
-		}
+
 	
 	
 		
