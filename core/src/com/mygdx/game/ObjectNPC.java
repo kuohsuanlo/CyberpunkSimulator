@@ -13,6 +13,7 @@ import com.mygdx.item.ItemAbstract;
 import com.mygdx.job.*;
 import com.mygdx.mission.MissionAbstract;
 import com.mygdx.need.*;
+import com.mygdx.util.CoorUtility;
 import com.mygdx.util.ThreadNpcAI;
 
 public class ObjectNPC extends ObjectAbstract{
@@ -586,7 +587,7 @@ public class ObjectNPC extends ObjectAbstract{
     			this.texture.getWidth()/2, this.texture.getHeight()/2, 
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 	}
-	public void renderFont(SpriteBatch batch, MyGdxGame game) {
+	public void renderFont(SpriteBatch batch) {
 		
 		//rendering Job
 		JobAbstract ja = this.cjob;
@@ -610,7 +611,7 @@ public class ObjectNPC extends ObjectAbstract{
 	
 	
 		
-		if(game.isNearCursor(this)){
+		if(CoorUtility.isNearCursor(this.sPosition)){
 			String Stmp = "";
 			int line =0;
 			for(int i=0;i<this.needQueue.size;i++){

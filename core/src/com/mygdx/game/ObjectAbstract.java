@@ -31,13 +31,16 @@ public abstract class ObjectAbstract {
 	    rotation = 0;
 	}
 
-    public void c2s(){
-    	this.sPosition =   this.gPosition;
+    public void updateScreenCoor(MyGdxGame game){
+    	/*
+    	 * We don't transform here because we might have done it on batch. 
+    	 */
+    	this.sPosition = this.gPosition;
     }
-
+    
     public abstract String getDisplayName();
 
 	public abstract void renderSelf(SpriteBatch batch);
-	public abstract void renderFont(SpriteBatch batch,MyGdxGame game);
+	public abstract void renderFont(SpriteBatch batch);
 
 }

@@ -53,8 +53,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	private int threadnpc_pool_number;
 	private Random random = new Random();
 	
-	private OrthographicCamera cam;
-	private FitViewport viewport ;
+	public OrthographicCamera cam;
+	public FitViewport viewport ;
 	private int mouseX;
 	private int mouseY;
 	
@@ -111,6 +111,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void resize(int width, int height){
 	    viewport.update(width, height, true);
+
 	}
 	
 	private void initModule(){
@@ -169,6 +170,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			
 		}
 	}
+	
 	private Vector2 getRandomLoc(){
 		return new Vector2(random.nextFloat()*Gdx.graphics.getWidth(),random.nextFloat()*Gdx.graphics.getHeight());
 	}
@@ -203,27 +205,27 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	private void drawNpc(){
 		for(int i=0;i<npc_queue.size;i++){
-			npc_queue.get(i).c2s();
+			npc_queue.get(i).updateScreenCoor(this);
 			npc_queue.get(i).renderSelf(batch);
 		}	
 	}
 	
 	private void drawItem(){
 		for(int i=0;i<item_queue.size;i++){
-			item_queue.get(i).c2s();
+			item_queue.get(i).updateScreenCoor(this);
 			item_queue.get(i).renderSelf(batch);
 		}
 	}
 	
 	private void drawNpcFont(){
 		for(int i=0;i<npc_queue.size;i++){
-			npc_queue.get(i).renderFont(batch,this);
+			npc_queue.get(i).renderFont(batch);
 		}	
 	}
 	
 	private void drawItemFont(){
 		for(int i=0;i<item_queue.size;i++){
-			item_queue.get(i).renderFont(batch,this);
+			item_queue.get(i).renderFont(batch);
 		}
 	}
 	private void drawTerrain(){
@@ -287,9 +289,6 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 	public void setMouseY(int mouseY) {
 		this.mouseY = mouseY;
-	}
-	public boolean isNearCursor(ObjectAbstract oa){
-		return this.s2c(oa.sPosition).dst(new Vector2(Gdx.input.getX(),Gdx.input.getY()))<=50;
 	}
 }
 

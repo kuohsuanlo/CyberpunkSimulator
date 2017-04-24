@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.ObjectAbstract;
 import com.mygdx.game.ObjectNPC;
+import com.mygdx.util.CoorUtility;
 
 public class ItemAbstract extends ObjectAbstract {
 	private float texture_default_size = 16;
@@ -31,6 +32,7 @@ public class ItemAbstract extends ObjectAbstract {
 		super();
 		this.setId(id);
 		this.gPosition = gp;
+		this.sPosition = gp;
 		this.price = price;
 		this.name = name;
 		this.setStack_number(stack_number);
@@ -53,6 +55,7 @@ public class ItemAbstract extends ObjectAbstract {
 		super();
 		this.setId(id);
 		this.gPosition = gp;
+		this.sPosition = gp;
 		this.price = price;
 		this.name = name;
 		this.setStack_number(stack_number);
@@ -124,11 +127,11 @@ public class ItemAbstract extends ObjectAbstract {
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 
 	}
-	public void renderFont(SpriteBatch batch,  MyGdxGame game) {
+	public void renderFont(SpriteBatch batch) {
 		if(font ==null){
 			this.font = new BitmapFont();
 		}
-		if(game.isNearCursor(this)){
+		if(CoorUtility.isNearCursor(this.sPosition)){
 			font.draw(batch, this.getDisplayName(), this.sPosition.x, this.sPosition.y+2*this.texture.getHeight());
 		}
 	}
