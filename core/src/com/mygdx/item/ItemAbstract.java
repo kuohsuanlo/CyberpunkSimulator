@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.ObjectAbstract;
 import com.mygdx.game.ObjectNPC;
 
@@ -40,7 +41,6 @@ public class ItemAbstract extends ObjectAbstract {
 		this.owner = owner;
 		this.maxAgeTick = 100;
 		this.destroyedItem = destroyedItem;
-		 
 		
         xOffset = this.texture_default_size*0.5f;
         yOffset = this.texture_default_size*0.5f;
@@ -124,11 +124,11 @@ public class ItemAbstract extends ObjectAbstract {
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 
 	}
-	public void renderFont(SpriteBatch batch) {	
+	public void renderFont(SpriteBatch batch,  MyGdxGame game) {
 		if(font ==null){
 			this.font = new BitmapFont();
 		}
-		if(nearCursor()){
+		if(game.isNearCursor(this)){
 			font.draw(batch, this.getDisplayName(), this.sPosition.x, this.sPosition.y+2*this.texture.getHeight());
 		}
 	}

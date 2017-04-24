@@ -50,9 +50,10 @@ public class ObjectBuilding extends ObjectAbstract {
 	}
 
 	@Override
-	public void renderFont(SpriteBatch batch) {
+	public void renderFont(SpriteBatch batch, MyGdxGame game) {
 		// TODO Auto-generated method stub
 		
 	}
+
 
 }

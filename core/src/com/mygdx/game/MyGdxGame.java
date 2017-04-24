@@ -6,14 +6,19 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.item.ItemFood;
+import com.mygdx.job.JobRest;
 import com.mygdx.need.NeedAbstract;
 import com.mygdx.need.NeedHunger;
 import com.mygdx.need.NeedThirst;
@@ -30,11 +35,12 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 1000;
+	public static final int npc_number = 10;
 	public static final int avg_aiq_number = 200;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
+	private BitmapFont font;
 	private ObjectMap map;
 	
 	private int map_render_size_x ;
@@ -44,15 +50,21 @@ public class MyGdxGame extends ApplicationAdapter {
 	private Queue<ItemAbstract> item_queue;
 	
 	private Queue<ThreadNpcAI> threadnpc_pool;
-	
 	private int threadnpc_pool_number;
 	private Random random = new Random();
+	
+	private OrthographicCamera cam;
+	private FitViewport viewport ;
+	private int mouseX;
+	private int mouseY;
 	
 	private boolean gamePause;
 	
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
+		font = new BitmapFont();
+		
 		this.initThreadPool();
 		this.initMap();
 		this.initNpc();
@@ -68,17 +80,22 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
-		//this.drawTerrain();
 		if(!this.gamePause){
 			this.callItem();
 			this.callNpc();
 			
 		}
+		
+		this.cam.update();
+		this.batch.setProjectionMatrix(cam.combined); //Important
+
 		this.drawItem();
 		this.drawNpc();
 		
-		//this.drawItemFont();
-		//this.drawNpcFont();
+		this.drawItemFont();
+		this.drawNpcFont();
+		
+		this.drawGameFont();
 		
 		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_queue.size+" / FPS : "+Gdx.graphics.getFramesPerSecond());
 		//Gdx.app.log("FPS",Gdx.graphics.getFramesPerSecond()+"");
@@ -90,7 +107,19 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.dispose();
 		disposeNpc();
 	}
+	
+	@Override
+	public void resize(int width, int height){
+	    viewport.update(width, height, true);
+	}
+	
 	private void initModule(){
+		
+		cam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		viewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), cam);
+		cam.position.set(cam.viewportWidth / 2f, cam.viewportHeight / 2f, 0);
+		cam.update();
+		
 		InGameInputProcessor inputProcessor = new InGameInputProcessor(this);
 		Gdx.input.setInputProcessor(inputProcessor);
 	}
@@ -174,7 +203,6 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	private void drawNpc(){
 		for(int i=0;i<npc_queue.size;i++){
-			//npc_list[i].render(batch);
 			npc_queue.get(i).c2s();
 			npc_queue.get(i).renderSelf(batch);
 		}	
@@ -189,13 +217,13 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	private void drawNpcFont(){
 		for(int i=0;i<npc_queue.size;i++){
-			npc_queue.get(i).renderFont(batch);
+			npc_queue.get(i).renderFont(batch,this);
 		}	
 	}
 	
 	private void drawItemFont(){
 		for(int i=0;i<item_queue.size;i++){
-			item_queue.get(i).renderFont(batch);
+			item_queue.get(i).renderFont(batch,this);
 		}
 	}
 	private void drawTerrain(){
@@ -210,6 +238,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		for(int i=0;i<this.map_render_size_x*this.map_render_size_y;i++){
 			batch.draw(map.tr_texture[this.map_buffer[i]],this.current_block_size*(i/this.map_render_size_x),current_block_size*(i%this.map_render_size_x));
 		}
+	}
+	private void drawGameFont(){
+		font.draw(batch, Gdx.graphics.getFramesPerSecond()+"/ Mouse"+this.getMouseX()+","+this.getMouseY(), Gdx.graphics.getWidth()/2,Gdx.graphics.getHeight()/2);
 	}
 	public int getThreadPoolNpcNumber(){
 		return this.threadnpc_pool_number;
@@ -238,14 +269,27 @@ public class MyGdxGame extends ApplicationAdapter {
 	public boolean isGamePause() {
 		return gamePause;
 	}
-
-
 	public void setGamePause(boolean gamePause) {
 		this.gamePause = gamePause;
 	}
-	public Vector2 s2c(int x, int y){
-		return new Vector2(x,Gdx.graphics.getHeight()-y);
+	public Vector2 s2c(Vector2 sc){
+		return new Vector2(sc.x,Gdx.graphics.getHeight()-sc.y);
 
+	}
+	public int getMouseX() {
+		return mouseX;
+	}
+	public void setMouseX(int mouseX) {
+		this.mouseX = mouseX;
+	}
+	public int getMouseY() {
+		return mouseY;
+	}
+	public void setMouseY(int mouseY) {
+		this.mouseY = mouseY;
+	}
+	public boolean isNearCursor(ObjectAbstract oa){
+		return this.s2c(oa.sPosition).dst(new Vector2(Gdx.input.getX(),Gdx.input.getY()))<=50;
 	}
 }
 
@@ -259,7 +303,9 @@ class InGameInputProcessor implements InputProcessor {
     public boolean touchDown (int x, int y, int pointer, int button) {
     	if (button == Input.Buttons.LEFT) {
     		// Put food (testing)
-    		mgg.addRandomItem(mgg.s2c(x, y),1);
+    		mgg.addRandomItem(mgg.s2c(new Vector2(x, y)),1);
+    		mgg.setMouseX(x);
+    		mgg.setMouseY(y);
     		return true;  
     	}
     	return false;

@@ -32,16 +32,12 @@ public abstract class ObjectAbstract {
 	}
 
     public void c2s(){
-    	this.sPosition.x =   this.gPosition.x;
-    	this.sPosition.y =   this.gPosition.y;
+    	this.sPosition =   this.gPosition;
     }
 
     public abstract String getDisplayName();
 
 	public abstract void renderSelf(SpriteBatch batch);
-	public abstract void renderFont(SpriteBatch batch);
-	public boolean nearCursor(){
-		return new Vector2(Gdx.input.getX(),Gdx.graphics.getHeight()-Gdx.input.getY()).dst2(this.sPosition)<1000;
-	}
-	
+	public abstract void renderFont(SpriteBatch batch,MyGdxGame game);
+
 }

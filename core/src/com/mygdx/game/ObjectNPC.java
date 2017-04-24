@@ -213,44 +213,50 @@ public class ObjectNPC extends ObjectAbstract{
     	if(jobBatchQueue.size==0){
     		return;
     	}
-    	
-    	//do job
-    	this.cjob = jobBatchQueue.first().getFirstUndoneJob();
-    	
-    	if(cjob==null) return;
-    	
-    	if(this.cjob instanceof JobMove){
-    		JobMove mj = (JobMove)this.cjob;
-    		this.walkOneTick(mj);
-    	}
-    	else if(this.cjob instanceof JobRest){
-    		JobRest rj = (JobRest)this.cjob;
-    		this.rest(rj);
-    	}
-    	else if(this.cjob instanceof JobConsume){
-    		JobConsume cj = (JobConsume)this.cjob;
-    		this.consumeItem(cj);
-    	}
-    	else if(this.cjob instanceof JobTake){
-    		JobTake tj = (JobTake) this.cjob;
-    		this.takeItem(tj);
-    	}
-    	else if(this.cjob instanceof JobProduce){
-    		JobProduce pj = (JobProduce) this.cjob;
-    		this.produceItem(pj);
-    	}
-    	//check progress
-    	if(this.checkJobDone(this.cjob)){
-    		this.jobConsequence(this.cjob);
-    		this.cjob.setJobDone(true);
-    	}
-    	
+
     	/*
-    	 * The consequences of a job batch, probably like the salary earned after picking 5 trash on road.
+    	 * Sync jobBatchQueue, because the other thread might pop the other batch, making the last line of 
+    	 * code popping the wrong job.
     	 */
-    	if(jobBatchQueue.first().isJobBatchDone()){
-    		this.jobBatchConsequence(jobBatchQueue.first());
-    		jobBatchQueue.removeFirst();
+    	synchronized(jobBatchQueue){
+    		this.cjob = jobBatchQueue.first().getFirstUndoneJob();
+        	
+        	if(cjob==null) return;
+        	
+        	if(this.cjob instanceof JobMove){
+        		JobMove mj = (JobMove)this.cjob;
+        		this.walkOneTick(mj);
+        	}
+        	else if(this.cjob instanceof JobRest){
+        		JobRest rj = (JobRest)this.cjob;
+        		this.rest(rj);
+        	}
+        	else if(this.cjob instanceof JobConsume){
+        		JobConsume cj = (JobConsume)this.cjob;
+        		this.consumeItem(cj);
+        	}
+        	else if(this.cjob instanceof JobTake){
+        		JobTake tj = (JobTake) this.cjob;
+        		this.takeItem(tj);
+        	}
+        	else if(this.cjob instanceof JobProduce){
+        		JobProduce pj = (JobProduce) this.cjob;
+        		this.produceItem(pj);
+        	}
+        	//check progress
+        	if(this.checkJobDone(this.cjob)){
+        		this.jobConsequence(this.cjob);
+        		this.cjob.setJobDone(true);
+        	}
+        	
+        	/*
+        	 * The consequences of a job batch, probably like the salary earned after picking 5 trash on road.
+        	 */
+        	if(jobBatchQueue.first().isJobBatchDone()){
+        		this.jobBatchConsequence(jobBatchQueue.first());
+        		jobBatchQueue.removeFirst();
+        	}
+        	
     	}
     	
     }
@@ -307,6 +313,24 @@ public class ObjectNPC extends ObjectAbstract{
     	 * It is not the NPC's conseqence. So we don't reduce the number here. 
     	 */
     	else if(ja instanceof JobTake){
+    		JobTake tj = (JobTake) ja;
+    		ItemAbstract tkItem = tj.takenItem.getTaken(this.determineTakingItemNumber()) ;
+        	this.obtainItem(tkItem);
+        	
+        	//Filling information for the taken item
+        	if(tj.nextPendingJob!=null  && tj.nextPendingJob instanceof JobConsume){
+        		((JobConsume)tj.nextPendingJob).consumedItem=tkItem;
+        		((JobConsume)tj.nextPendingJob).setPosition(this.gPosition);
+        	}
+    	}
+    	else if(ja instanceof JobProduce){
+    		JobProduce pj = (JobProduce) ja;
+        	//Producing process done, generate items.
+        	if(pj.getCurrentProgress()>=pj.getMaxProgress()){
+        		for(int i=0;i<pj.recipe.producedItemQueue.size;i++){
+            		this.obtainItem(pj.recipe.producedItemQueue.get(i));
+            	}
+        	}
     	}
     }
     
@@ -316,17 +340,7 @@ public class ObjectNPC extends ObjectAbstract{
 				return true;
     		}
     	}
-    	else if(ja instanceof JobRest){
-			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
-				return true;	
-			}
-    	}
-    	else if(ja instanceof JobConsume){
-			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
-				return true;	
-			}
-    	}
-    	else if(ja instanceof JobTake){
+    	else{
 			if(ja.getCurrentProgress()>=ja.getMaxProgress()){
 				return true;	
 			}
@@ -525,7 +539,6 @@ public class ObjectNPC extends ObjectAbstract{
     	if(pj.recipe.usedItemQueue==null  ||  pj.recipe.producedItemQueue==null){
     		pj.setJobAborted(true);
     		pj.setCurrentProgress(pj.getMaxProgress());
-
     		return;
     	}
     	/*
@@ -535,10 +548,16 @@ public class ObjectNPC extends ObjectAbstract{
     	 * We also need recipe here.
     	 * If recipe ==null, abort, because it might mean that NPC has no knowledge of making it.
     	 * This fits the game. NPC.getItemRecipe() == null;
-    	 * TODO : 
     	 */
-    	Begin from here 
     	
+    	/*Let's assume that the NPC always has the recipe's used items.
+    	 * TODO : Check the npc's itemQueue contains all the usedItems
+    	 */
+    	
+    	//Producing Items
+    	pj.setCurrentProgress(pj.getCurrentProgress() + 1);
+    	
+
     	
     }
     public void takeItem(JobTake tj){
@@ -553,14 +572,7 @@ public class ObjectNPC extends ObjectAbstract{
     		return;
     	}
     	
-		ItemAbstract tkItem = tj.takenItem.getTaken(this.determineTakingItemNumber()) ;
-    	this.obtainItem(tkItem);
-    	
-    	//Filling information for the taken item
-    	if(tj.nextPendingJob!=null  && tj.nextPendingJob instanceof JobConsume){
-    		((JobConsume)tj.nextPendingJob).consumedItem=tkItem;
-    		((JobConsume)tj.nextPendingJob).setPosition(this.gPosition);
-    	}
+
 		tj.setCurrentProgress(tj.getMaxProgress());
     }
     
@@ -574,7 +586,7 @@ public class ObjectNPC extends ObjectAbstract{
     			this.texture.getWidth()/2, this.texture.getHeight()/2, 
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 	}
-	public void renderFont(SpriteBatch batch) {
+	public void renderFont(SpriteBatch batch, MyGdxGame game) {
 		
 		//rendering Job
 		JobAbstract ja = this.cjob;
@@ -598,7 +610,7 @@ public class ObjectNPC extends ObjectAbstract{
 	
 	
 		
-		if(nearCursor()){
+		if(game.isNearCursor(this)){
 			String Stmp = "";
 			int line =0;
 			for(int i=0;i<this.needQueue.size;i++){
