@@ -34,8 +34,8 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 500;
-	public static final int avg_aiq_number = 200;
+	public static final int npc_number = 300;
+	public static final int avg_aiq_number = 500;
 	public static final int npc_resource_nubmer = 250;
 	
 	private SpriteBatch batch;
@@ -55,8 +55,13 @@ public class MyGdxGame extends ApplicationAdapter {
 	private int mouseY;
 	
 	private boolean gamePause;
+	private boolean fontPrint = true;
 	private long lastTick;
 	private float lastTimeElapsed;
+	/*
+	 * 100 = NORMAL SPEED;
+	 */
+	public float realTimeRatio = 100; 
 	
 	
 	@Override
@@ -97,10 +102,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		this.drawItem();
 		this.drawNpc();
 		
-		this.drawItemFont();
-		this.drawNpcFont();
-		
-		this.drawGameFont();
+		if(this.isFontPrint()){
+			this.drawItemFont();
+			this.drawNpcFont();
+			
+			this.drawGameFont();
+		}
 		
 		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_queue.size+" / FPS : "+Gdx.graphics.getFramesPerSecond());
 		//Gdx.app.log("FPS",Gdx.graphics.getFramesPerSecond()+"");
@@ -156,9 +163,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
 		
 		for(int i=0;i<npc_number*1;i++){
-			item_queue.addFirst(new ItemAbstract(3,getRandomLoc() ,0,"free bucket",2,0,0,0f,0f,null));
-			item_queue.addFirst(new ItemAbstract(5,getRandomLoc() ,0,"free food",2,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
-			item_queue.addFirst(new ItemAbstract(4,getRandomLoc() ,0,"free water",2,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
+			item_queue.addFirst(new ItemAbstract(3,getRandomLoc() ,0,"free bucket",200,0,0,0f,0f,null));
+			item_queue.addFirst(new ItemAbstract(5,getRandomLoc() ,0,"free food",200,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
+			item_queue.addFirst(new ItemAbstract(4,getRandomLoc() ,0,"free water",200,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
 		}
 	}
 	public void addItem(ItemAbstract ia,Vector2 loc){
@@ -280,6 +287,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 		this.gamePause = gamePause;
 	}
+	public boolean isFontPrint() {
+		return fontPrint;
+	}
+	public void setFontPrint(boolean fontPrint) {
+		this.fontPrint = fontPrint;
+	}
 	public float getLastTimeElapsed() {
 		return this.lastTimeElapsed;
 	}
@@ -329,6 +342,20 @@ class InGameInputProcessor implements InputProcessor {
 	public boolean keyDown(int keycode) {
 		if (keycode == Input.Keys.SPACE) {
 			mgg.setGamePause(!mgg.isGamePause());
+			return true;  
+		}
+		else if (keycode == Input.Keys.P) {
+			mgg.setFontPrint(!mgg.isFontPrint());
+			return true;  
+		}
+		else if (keycode == Input.Keys.UP) {
+			mgg.realTimeRatio+=20;
+			return true;  
+		}
+		else if (keycode == Input.Keys.DOWN) {
+			if(mgg.realTimeRatio>=20)
+				mgg.realTimeRatio-=20;
+			
 			return true;  
 		}
 		return false;

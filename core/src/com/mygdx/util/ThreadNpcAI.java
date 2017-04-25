@@ -175,7 +175,7 @@ public class ThreadNpcAI extends Thread{
 		synchronized(jobBatchQueue){
 
 			//int jobType = oq.npc.getRandom().nextInt(2);
-			if(oq.npc.getJobBatchQueue().size>=3) return;
+			if(oq.npc.getJobBatchQueue().size>=2) return;
 			
 			if(oq.npc.jobType ==0){
 				ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);			

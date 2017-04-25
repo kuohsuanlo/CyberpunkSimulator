@@ -10,7 +10,7 @@ public class CharacterUtility {
 		for(int i=0;i<npc.getBpNumber();i++){
 			baseEC_tmp+=(npc.getBpTraits()[i].traits.str+npc.getBpTraits()[i].traits.vit);
 		}
-		return baseEC_tmp*0.5f;
+		return baseEC_tmp*0.5f*(npc.game.realTimeRatio/100f);
 	}
 	public static float calculateSpeed(ObjectNPC npc){
 		float speed_tmp=0;
@@ -18,7 +18,7 @@ public class CharacterUtility {
 		for(int i=0;i<npc.getBpNumber();i++){
 			speed_tmp+=npc.getBpTraits()[i].traits.dex;
 		}
-		return speed_tmp;
+		return speed_tmp/100;
 	}
 	
 	public static float calculateNeedMax(ObjectNPC npc, int type){

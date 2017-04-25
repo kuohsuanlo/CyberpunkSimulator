@@ -113,12 +113,8 @@ public class ObjectNPC extends ObjectAbstract{
     	this.increaseNeed(tnpc);//1
         this.cycleBody(tnpc);//2
     	
-    	
-    	
     	this.tickRC();
     	if(this.needRC()){
-    		//this.printSelfInfo();
-    		//increase need
         	this.checkNeed(tnpc);//3
         	this.updatePersonalAbilities(tnpc);//4
         	//deciding the daily job(by professional)
@@ -491,16 +487,16 @@ public class ObjectNPC extends ObjectAbstract{
     	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed(this.getBaseEnergyConsumption());
     	Vector2 vtmp = new Vector2(mj.getPosition().x - this.gPosition.x, mj.getPosition().y - this.gPosition.y);
     	
-    	if(vtmp.len()>this.getSpeed()*Gdx.graphics.getDeltaTime()){
-        	vtmp.setLength(this.getSpeed()*Gdx.graphics.getDeltaTime());
+    	if(vtmp.len()>this.getSpeed()*this.game.getLastTimeElapsed()*this.game.realTimeRatio){
+        	vtmp.setLength(this.getSpeed()*this.game.getLastTimeElapsed()*this.game.realTimeRatio);
     	}
     	this.rotation = vtmp.angle();
     	this.gPosition.add(vtmp);
     }
 
     public void rest(JobRest rj){
-    	rj.setCurrentProgress(rj.getCurrentProgress() + this.game.getLastTimeElapsed()*100) ;
-    	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed((this.getBaseEnergyConsumption())*this.game.getLastTimeElapsed()*-100);
+    	rj.setCurrentProgress(rj.getCurrentProgress() + this.game.getLastTimeElapsed()*this.game.realTimeRatio) ;
+    	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed((this.getBaseEnergyConsumption())*this.game.getLastTimeElapsed()*-1f*this.game.realTimeRatio);
     }
     public void consumeItem(JobConsume cj){
     	if(cj.consumedItem==null){
@@ -518,12 +514,12 @@ public class ObjectNPC extends ObjectAbstract{
     	
     	ItemAbstract Itmp = cj.consumedItem;
     	if(cj.getDecreasedNeed()!=null){
-    		cj.getDecreasedNeed().addNeed((Itmp.getDecreasedNeed_amount()/cj.getMaxProgress())*this.game.getLastTimeElapsed()*-100);
+    		cj.getDecreasedNeed().addNeed((Itmp.getDecreasedNeed_amount()/cj.getMaxProgress())*this.game.getLastTimeElapsed()*-this.game.realTimeRatio);
     	}
     	if(cj.getIncreasedNeed()!=null){
-    		cj.getIncreasedNeed().addNeed(Itmp.getIncreasedNeed_amount()/cj.getMaxProgress()*this.game.getLastTimeElapsed()*100);
+    		cj.getIncreasedNeed().addNeed(Itmp.getIncreasedNeed_amount()/cj.getMaxProgress()*this.game.getLastTimeElapsed()*this.game.realTimeRatio);
     	}
-    	cj.setCurrentProgress(cj.getCurrentProgress() + this.game.getLastTimeElapsed()*100);
+    	cj.setCurrentProgress(cj.getCurrentProgress() + this.game.getLastTimeElapsed()*this.game.realTimeRatio);
 	
     }
     public void produceItem(JobProduce pj){
@@ -554,7 +550,7 @@ public class ObjectNPC extends ObjectAbstract{
         		return;
     		}
     	}
-    	pj.setCurrentProgress(pj.getCurrentProgress() + this.game.getLastTimeElapsed()*100);
+    	pj.setCurrentProgress(pj.getCurrentProgress() + this.game.getLastTimeElapsed()*this.game.realTimeRatio);
     	
 
     	
