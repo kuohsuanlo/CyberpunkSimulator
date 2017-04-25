@@ -13,12 +13,16 @@ public class ItemUtility {
     	/*
     	 * Linear search, need to be more efficient, might could be done by stochastic search. 
     	 */
-    	for(int i=0;i<q.size;i++){
-    		if(q.get(i).getDecreasedNeed_id()==NEED_ID){
-    			candidates.addFirst(q.get(i));
-    		}
+    	synchronized(q){
+	    	for(int i=0;i<q.size;i++){
+	    		synchronized(q.get(i)){
+		    		if(q.get(i)!=null  &&  q.get(i).getDecreasedNeed_id()==NEED_ID){
+		    			candidates.addFirst(q.get(i));
+		    		}
+    			}
+	    	}
+	    	return candidates;
     	}
-    	return candidates;
     }
     
     public static Queue<ItemAbstract> findItemWithID(Queue<ItemAbstract> q,int iid){
@@ -27,11 +31,16 @@ public class ItemUtility {
     	/*
     	 * Linear search, need to be more efficient, might could be done by stochastic search. 
     	 */
-    	for(int i=0;i<q.size;i++){
-    		if(q.get(i).getId()==iid){
-    			candidates.addFirst(q.get(i));
-    		}
+    	synchronized(q){
+    		for(int i=0;i<q.size;i++){
+    			synchronized(q.get(i)){
+    				if(q.get(i)!=null  &&  q.get(i).getId()==iid){
+            			candidates.addFirst(q.get(i));
+            		}
+    			}
+        	}
+        	return candidates;
     	}
-    	return candidates;
+    	
     }
 }

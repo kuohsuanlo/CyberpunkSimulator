@@ -418,6 +418,8 @@ public class ObjectNPC extends ObjectAbstract{
     	ItemAbstract ans;
     	//if(q.size==0) return null;
     	synchronized(q){
+    		
+    		//  TODO : java.lang.NullPointerException
     		Queue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid);
     		if(qtmp.size>0){
     			ans = qtmp.get(random.nextInt(qtmp.size));

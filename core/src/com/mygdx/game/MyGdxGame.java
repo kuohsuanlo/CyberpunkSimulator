@@ -34,8 +34,8 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 1000;
-	public static final int avg_aiq_number = 500;
+	public static final int npc_number = 500;
+	public static final int avg_aiq_number = 400;
 	public static final int npc_resource_nubmer = 1000;
 	
 	private SpriteBatch batch;
@@ -161,7 +161,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private void initItem(){
 		ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
 		
-		for(int i=0;i<npc_number*1;i++){
+		for(int i=0;i<npc_number/5;i++){
 			item_queue.addFirst(new ItemAbstract(3,getRandomLoc() ,0,"free bucket",200,0,0,0f,0f,null));
 			item_queue.addFirst(new ItemAbstract(5,getRandomLoc() ,0,"free food",200,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
 			item_queue.addFirst(new ItemAbstract(4,getRandomLoc() ,0,"free water",200,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
@@ -185,7 +185,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 	}
 	
-	private Vector2 getRandomLoc(){
+	public Vector2 getRandomLoc(){
 		return new Vector2(random.nextFloat()*Gdx.graphics.getWidth(),random.nextFloat()*Gdx.graphics.getHeight());
 	}
 	
@@ -215,8 +215,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	private void cleanItem(){
 		synchronized(item_queue){
 			for(int i=0;i<item_queue.size;i++){
-				if(item_queue.get(i).itemNeedDestroy()){
-					item_queue.removeIndex(i);
+				synchronized(item_queue.get(i)){
+					if(item_queue.get(i).itemNeedDestroy()){
+						item_queue.removeIndex(i);
+					}
 				}
 			}
 		}
@@ -354,6 +356,17 @@ class InGameInputProcessor implements InputProcessor {
 		else if (keycode == Input.Keys.DOWN) {
 			if(mgg.realTimeRatio>=20)
 				mgg.realTimeRatio-=20;
+			
+			return true;  
+		}
+
+		else if (keycode == Input.Keys.W) {
+			mgg.realTimeRatio+=1000;
+			return true;  
+		}
+		else if (keycode == Input.Keys.S) {
+			if(mgg.realTimeRatio>=1000)
+				mgg.realTimeRatio-=1000;
 			
 			return true;  
 		}

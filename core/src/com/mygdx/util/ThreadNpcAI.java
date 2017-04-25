@@ -189,19 +189,23 @@ public class ThreadNpcAI extends Thread{
 				jobBatchQueue.addLast(jb);
 				
 		
+				JobAbstractBatch jb2 = new JobAbstractBatch(null); 
 				Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
 				Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
-				ItemAbstract tool = new ItemAbstract(3,oq.npc.gPosition,0,"bucket",1,0,0,0f,0f,null);
-				usedItems.addFirst(ingot);
+				ItemAbstract ingot_used = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);		
+				ItemAbstract tool = new ItemAbstract(7,oq.npc.gPosition,0,"tool",1,0,0,0f,0f,null);
+				usedItems.addFirst(ingot_used);
 				producedItems.addFirst(tool);
 				ItemRecipe recipe_tool = new ItemRecipe(usedItems, producedItems);
 		    	
-				jb.getBatch().addLast(new JobProduce(oq.npc.gPosition, 100, 0, null, null, 0, 0, recipe_tool));
+				jb2.getBatch().addLast(new JobProduce(oq.npc.gPosition, 100, 0, null, null, 0, 0, recipe_tool));
 				ItemAbstract foundItem2 = oq.npc.findItemOnBody(tool.getId());
 	    		if(foundItem2!=null){
-	    			jb.getBatch().addLast(new JobDrop(oq.npc.gPosition, 100, 0, null, null, 0, 0,foundItem2));
+	    			Vector2 loc = oq.npc.game.getRandomLoc();
+	    			jb2.getBatch().addLast(new JobMove(loc, -1, -1, null, null,0,0));
+	    			jb2.getBatch().addLast(new JobDrop(loc, 100, 0, null, null, 0, 0,foundItem2));
 	    		}
-				jobBatchQueue.addLast(jb);	
+				jobBatchQueue.addLast(jb2);	
 			}
 			else if (oq.npc.jobType==1){
 				Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
@@ -224,7 +228,9 @@ public class ThreadNpcAI extends Thread{
 	    		
 	    		ItemAbstract foundItem2 = oq.npc.findItemOnBody(ingot.getId());
 	    		if(foundItem2!=null){
-	    			jb.getBatch().addLast(new JobDrop(oq.npc.gPosition, 100, 0, null, null, 0, 0,foundItem2));
+	    			Vector2 loc = oq.npc.game.getRandomLoc();
+	    			jb.getBatch().addLast(new JobMove(loc,-1, -1, null, null,0,0));
+	    			jb.getBatch().addLast(new JobDrop(loc, 100, 0, null, null, 0, 0,foundItem2));
 	    		}
 				jobBatchQueue.addLast(jb);		
 			}
@@ -232,6 +238,7 @@ public class ThreadNpcAI extends Thread{
 				ItemAbstract tool = new ItemAbstract(7,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);			
 	    		JobAbstractBatch jb = new JobAbstractBatch(null);  	
 	    		
+	    		//TODO: synchronize here <
 	    		ItemAbstract foundItem = oq.npc.findItemOnGround(tool.getId());
 				if(foundItem!=null){
 					jb.getBatch().addLast(new JobMove(foundItem.gPosition,-1, -1, null, null,0,0));
