@@ -36,17 +36,13 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	public static final int npc_number = 50;
 	public static final int avg_aiq_number = 200;
-	private int npc_resource_nubmer = 250;
-	public static int current_block_size = 16;
+	public static final int npc_resource_nubmer = 250;
+	
 	private SpriteBatch batch;
 	private BitmapFont font;
-	
-	private int map_render_size_x ;
-	private int map_render_size_y ;
-	private int[] map_buffer;
+
 	private Queue<ObjectNPC> npc_queue;
 	private Queue<ItemAbstract> item_queue;
-	
 	
 	private Queue<ThreadNpcAI> threadnpc_pool;
 	private int threadnpc_pool_number;
@@ -125,7 +121,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 	private void initThreadPool(){
 		this.gamePause = false;
-		this.threadnpc_pool_number = Math.max(2, Runtime.getRuntime().availableProcessors());
+		//this.threadnpc_pool_number = Math.max(2, Runtime.getRuntime().availableProcessors());
+		this.threadnpc_pool_number = Math.max(2, 2);
 		this.threadnpc_pool= new Queue<ThreadNpcAI>();
 		for(int i=0;i<threadnpc_pool_number;i++){
 			ThreadNpcAI Ttmp = new ThreadNpcAI(this);
