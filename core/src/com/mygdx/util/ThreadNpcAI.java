@@ -245,7 +245,7 @@ public class ThreadNpcAI extends Thread{
 	}
 	public boolean addRequest(ObjectNPC onpc, int type){
 		if(this.npcr_queue.size>=requestQueueMax){
-			Gdx.app.log("ADDR",""+type);
+			//Gdx.app.log("ADDR",""+type);
 			return false;
 		}
 		else{

@@ -91,7 +91,7 @@ public class ObjectNPC extends ObjectAbstract{
     	needQueue = new Queue<NeedAbstract>();
     	bpTraits = new ObjectBodyPart[bpNumber];
     	
-    	font = new BitmapFont(); 
+    	//font = new BitmapFont(); 
     	
     	
     	//initializing in-game data
@@ -486,11 +486,11 @@ public class ObjectNPC extends ObjectAbstract{
     public void walkOneTick(JobMove mj){
     	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed(this.getBaseEnergyConsumption());
     	Vector2 vtmp = new Vector2(mj.getPosition().x - this.gPosition.x, mj.getPosition().y - this.gPosition.y);
+    	this.rotation = vtmp.angle();
     	
     	if(vtmp.len()>this.getSpeed()*this.game.getLastTimeElapsed()*this.game.realTimeRatio){
         	vtmp.setLength(this.getSpeed()*this.game.getLastTimeElapsed()*this.game.realTimeRatio);
     	}
-    	this.rotation = vtmp.angle();
     	this.gPosition.add(vtmp);
     }
 
@@ -603,7 +603,9 @@ public class ObjectNPC extends ObjectAbstract{
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 	}
 	public void renderFont(SpriteBatch batch) {
-		
+		if(font==null){
+			font = new BitmapFont(); 
+		}
 		//rendering Job
 		JobAbstract ja = this.cjob;
 		String prog ="";

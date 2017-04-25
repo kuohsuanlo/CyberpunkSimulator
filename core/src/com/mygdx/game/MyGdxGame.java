@@ -34,9 +34,9 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 300;
+	public static final int npc_number = 1000;
 	public static final int avg_aiq_number = 500;
-	public static final int npc_resource_nubmer = 250;
+	public static final int npc_resource_nubmer = 1000;
 	
 	private SpriteBatch batch;
 	private BitmapFont font;
@@ -55,7 +55,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	private int mouseY;
 	
 	private boolean gamePause;
-	private boolean fontPrint = true;
+	private boolean fontPrint;
 	private long lastTick;
 	private float lastTimeElapsed;
 	/*
@@ -105,9 +105,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		if(this.isFontPrint()){
 			this.drawItemFont();
 			this.drawNpcFont();
-			
-			this.drawGameFont();
 		}
+		this.drawGameFont();
 		
 		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_queue.size+" / FPS : "+Gdx.graphics.getFramesPerSecond());
 		//Gdx.app.log("FPS",Gdx.graphics.getFramesPerSecond()+"");
