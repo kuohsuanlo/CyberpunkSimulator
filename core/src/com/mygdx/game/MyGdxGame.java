@@ -17,7 +17,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.mygdx.item.ItemAbstract;
-import com.mygdx.item.ItemFood;
 import com.mygdx.job.JobRest;
 import com.mygdx.need.NeedAbstract;
 import com.mygdx.need.NeedHunger;
@@ -35,19 +34,19 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 1;
+	public static final int npc_number = 100;
 	public static final int avg_aiq_number = 200;
 	private int npc_resource_nubmer = 250;
 	public static int current_block_size = 16;
 	private SpriteBatch batch;
 	private BitmapFont font;
-	private ObjectMap map;
 	
 	private int map_render_size_x ;
 	private int map_render_size_y ;
 	private int[] map_buffer;
 	private Queue<ObjectNPC> npc_queue;
 	private Queue<ItemAbstract> item_queue;
+	
 	
 	private Queue<ThreadNpcAI> threadnpc_pool;
 	private int threadnpc_pool_number;
@@ -137,40 +136,36 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	private void initMap(){
 		item_queue = new Queue<ItemAbstract>();
-		map = new ObjectMap(this.item_queue);
-
-		this.map_render_size_x = this.map.x_MAX;
-		this.map_render_size_y = this.map.y_MAX;
-		this.map_buffer = new int[this.map_render_size_x*this.map_render_size_y];
 	}
 	private void initNpc(){
 		npc_queue = new Queue<ObjectNPC>();
 		for(int id=0;id<npc_number;id++){
-			npc_queue.addLast( new ObjectNPC(id,id%npc_resource_nubmer,ObjectNPC.HUMAN,map,random,this) );
+			npc_queue.addLast( new ObjectNPC(id,id%npc_resource_nubmer,ObjectNPC.HUMAN,random,this) );
 		}
 	}	
 	private void initItem(){
 		ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
 		
-		for(int i=0;i<npc_number;i++){
-			item_queue.addFirst(new ItemAbstract(3,getRandomLoc() ,0,"free bucket",1,0,0,0f,0f,null));
-			item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",0,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
-			item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",0,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
+		for(int i=0;i<npc_number*2;i++){
+			item_queue.addFirst(new ItemAbstract(3,getRandomLoc() ,0,"free bucket",100,0,0,0f,0f,null));
+			item_queue.addFirst(new ItemAbstract(5,getRandomLoc() ,0,"free food",100,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
+			item_queue.addFirst(new ItemAbstract(4,getRandomLoc() ,0,"free water",100,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
 		}
 	}
-	public void addItem(ItemAbstract ia){
+	public void addItem(ItemAbstract ia,Vector2 loc){
+		ia.gPosition.x = loc.x;
+		ia.gPosition.y = loc.y;
 		item_queue.addFirst(ia);
 	}
 	public void addRandomItem(Vector2 loc, int times){
 		for(int i=0;i<times;i++){
-			if(random.nextBoolean()){
-				item_queue.addFirst(new ItemFood(5,getRandomLoc() ,0,"free food",1,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
-			}
-			else{
-				ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
-				item_queue.addFirst(new ItemFood(4,getRandomLoc() ,0,"free water",1,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
-			}
-			item_queue.addFirst(new ItemFood(3,getRandomLoc() ,0,"free bucket",1,0,0,0f,0f,null));
+			item_queue.addFirst(new ItemAbstract(5,getRandomLoc() ,0,"free food",1,NeedAbstract.NEED_HUNGER_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null));
+			ItemAbstract bucket = new ItemAbstract(3,getRandomLoc(),0,"bucket",1,0,0,0f,0f,null);
+			item_queue.addFirst(new ItemAbstract(4,getRandomLoc() ,0,"free water",1,NeedAbstract.NEED_THIRST_ID,NeedAbstract.NEED_FATIGUE_ID,200,0,null,bucket));
+			
+			item_queue.addFirst(new ItemAbstract(3,getRandomLoc() ,0,"free bucket",1,0,0,0f,0f,null));
+			item_queue.addFirst(new ItemAbstract(6,getRandomLoc() ,0,"free ingot",1,0,0,0f,0f,null));
+			item_queue.addFirst(new ItemAbstract(7,getRandomLoc() ,0,"free tool",1,0,0,0f,0f,null));
 			
 		}
 	}
@@ -232,19 +227,6 @@ public class MyGdxGame extends ApplicationAdapter {
 			item_queue.get(i).renderFont(batch);
 		}
 	}
-	private void drawTerrain(){
-		//Get rendered area's data into 1-dimension array
-		for(int i=0;i<this.map_render_size_x;i++){
-			for(int j=0;j<this.map_render_size_y;j++){
-				this.map_buffer[i*this.map_render_size_x+j] = map.type[i][j];
-			}
-		}
-		
-		//Draw 
-		for(int i=0;i<this.map_render_size_x*this.map_render_size_y;i++){
-			batch.draw(map.tr_texture[this.map_buffer[i]],this.current_block_size*(i/this.map_render_size_x),current_block_size*(i%this.map_render_size_x));
-		}
-	}
 	private void drawGameFont(){
 		font.draw(batch, Gdx.graphics.getFramesPerSecond()+"/ Mouse"+this.getMouseX()+","+this.getMouseY(), Gdx.graphics.getWidth()/2,Gdx.graphics.getHeight()/2);
 	}
@@ -271,6 +253,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		else{
 			return this.threadnpc_pool.get(min_idx);
 		}
+	}
+	public Queue<ItemAbstract> getItem_queue() {
+		return item_queue;
 	}
 	public boolean isGamePause() {
 		return gamePause;

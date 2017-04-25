@@ -6,7 +6,6 @@ import com.badlogic.gdx.utils.Queue;
 import com.mygdx.game.MyGdxGame;
 import com.mygdx.game.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
-import com.mygdx.item.ItemFood;
 import com.mygdx.item.ItemRecipe;
 import com.mygdx.job.JobAbstract;
 import com.mygdx.job.JobAbstractBatch;
@@ -170,23 +169,27 @@ public class ThreadNpcAI extends Thread{
 			baseEC_tmp+=(oq.npc.getBpTraits()[i].traits.str+oq.npc.getBpTraits()[i].traits.vit);
 		}
 		oq.npc.setSpeed(speed_tmp*oq.npc.getSpeedBase());
-		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime()*(3f));
+		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime()*(0.5f));
 	}
 	private void processDecideJob(ObjectRequest oq){
 		Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();
-		if(jobBatchQueue.size>0) return;
 		
-		int jobType = 1;//oq.npc.getRandom().nextInt(1);
-		if(jobType ==0){
-    	
-    		float x_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getWidth();
-    		float y_d = oq.npc.getRandom().nextFloat()*Gdx.graphics.getHeight();
-    		JobAbstractBatch jb = new JobAbstractBatch(null);
-			jb.getBatch().addLast(new JobMove(new Vector2(x_d,y_d),-1, -1, null, null,0,0));
+		//int jobType = oq.npc.getRandom().nextInt(2);
+		if(oq.npc.getJobBatchQueue().size>=5) return;
+		
+		if(oq.npc.jobType ==0){
+			ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);			
+    		JobAbstractBatch jb = new JobAbstractBatch(null);  	
+    		
+    		ItemAbstract foundItem = oq.npc.findItemOnGround(ingot.getId());
+			if(foundItem!=null){
+				jb.getBatch().addLast(new JobMove(foundItem.gPosition,-1, -1, null, null,0,0));
+				jb.getBatch().addLast(new JobTake(foundItem.gPosition,-1, -1, null, null,0,0,foundItem,null));
+			}
 			jobBatchQueue.addLast(jb);
 	    	
 		}
-		else{
+		else if (oq.npc.jobType==1){
 			
 			
 			Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
@@ -201,14 +204,18 @@ public class ThreadNpcAI extends Thread{
 			
     		JobAbstractBatch jb = new JobAbstractBatch(null);
     		
-    		Queue<ItemAbstract> foundItems = oq.npc.findItemOnGround(bucket);
-			if(foundItems.size>0){
-				jb.getBatch().addLast(new JobMove(foundItems.first().gPosition,-1, -1, null, null,0,0));
-				jb.getBatch().addLast(new JobTake(foundItems.first().gPosition,-1, -1, null, null,0,0,foundItems.first(),null));
+    		ItemAbstract foundItem1 = oq.npc.findItemOnGround(bucket.getId());
+			if(foundItem1!=null){
+				jb.getBatch().addLast(new JobMove(foundItem1.gPosition,-1, -1, null, null,0,0));
+				jb.getBatch().addLast(new JobTake(foundItem1.gPosition,-1, -1, null, null,0,0,foundItem1,null));
 			}
     		
     		jb.getBatch().addLast(new JobProduce(oq.npc.gPosition, 100, 0, null, null, 0, 0, recipe_ingot));
-			jb.getBatch().addLast(new JobDrop(oq.npc.gPosition, 100, 0, null, null, 0, 0,recipe_ingot.producedItemQueue.first()));
+    		
+    		ItemAbstract foundItem2 = oq.npc.findItemOnBody(ingot.getId());
+    		if(foundItem2!=null){
+    			jb.getBatch().addLast(new JobDrop(oq.npc.gPosition, 100, 0, null, null, 0, 0,foundItem2));
+    		}
 			jobBatchQueue.addLast(jb);
 	    	
 	    	

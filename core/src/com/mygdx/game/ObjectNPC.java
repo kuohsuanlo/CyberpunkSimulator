@@ -49,6 +49,8 @@ public class ObjectNPC extends ObjectAbstract{
     /*
      * Queues : to simulate the human behavior by creating the needs and daily jobs, or jobs driven by needs
      */
+	public int jobType;
+	
     private Queue<ItemAbstract> itemQueue;
     private Queue<NeedAbstract> needQueue;
     private Queue<JobAbstractBatch> jobBatchQueue;
@@ -60,11 +62,10 @@ public class ObjectNPC extends ObjectAbstract{
     private BitmapFont font;
 	
     private Random random;
-    private ObjectMap inMap; 
     
     private MyGdxGame game;
     
-    public ObjectNPC(int gid, int tid,int species,ObjectMap im, Random random, MyGdxGame game) {
+    public ObjectNPC(int gid, int tid,int species, Random random, MyGdxGame game) {
     	super();
     	
     	this.id = gid;
@@ -72,6 +73,7 @@ public class ObjectNPC extends ObjectAbstract{
     	this.setRandom(random);
     	this.currentTimeRC = random.nextFloat()*this.maxTimeRC;
     	this.game = game;
+    	this.jobType = this.id%2;
     	
     	gPosition.x = random.nextFloat()*Gdx.graphics.getWidth();
     	gPosition.y = random.nextFloat()*Gdx.graphics.getHeight();
@@ -87,7 +89,6 @@ public class ObjectNPC extends ObjectAbstract{
     	
     	font = new BitmapFont(); 
     	
-    	inMap = im;
     	
     	//initializing in-game data
     	initBodyPartTraits();
@@ -220,44 +221,48 @@ public class ObjectNPC extends ObjectAbstract{
     	 * code popping the wrong job.
     	 */
     	synchronized(jobBatchQueue){
-    		this.cjob = jobBatchQueue.first().getFirstUndoneJob();
+    		
+    		/*
+    		 * Do the first not-aborted and undone job. 
+    		 */
+    		this.cjob = jobBatchQueue.first().getFirstDoableJob();
         	
-        	if(cjob==null) return;
-        	
-        	if(this.cjob instanceof JobMove){
-        		JobMove mj = (JobMove)this.cjob;
-        		this.walkOneTick(mj);
-        	}
-        	else if(this.cjob instanceof JobRest){
-        		JobRest rj = (JobRest)this.cjob;
-        		this.rest(rj);
-        	}
-        	else if(this.cjob instanceof JobConsume){
-        		JobConsume cj = (JobConsume)this.cjob;
-        		this.consumeItem(cj);
-        	}
-        	else if(this.cjob instanceof JobTake){
-        		JobTake tj = (JobTake) this.cjob;
-        		this.takeItem(tj);
-        	}
-        	else if(this.cjob instanceof JobDrop){
-        		JobDrop tj = (JobDrop) this.cjob;
-        		this.dropItem(tj);
-        	}
-        	else if(this.cjob instanceof JobProduce){
-        		JobProduce pj = (JobProduce) this.cjob;
-        		this.produceItem(pj);
-        	}
-        	//check progress
-        	if(this.checkJobDone(this.cjob)){
-        		this.jobConsequence(this.cjob);
-        		this.cjob.setJobDone(true);
+        	if(cjob!=null){
+        		if(this.cjob instanceof JobMove){
+            		JobMove mj = (JobMove)this.cjob;
+            		this.walkOneTick(mj);
+            	}
+            	else if(this.cjob instanceof JobRest){
+            		JobRest rj = (JobRest)this.cjob;
+            		this.rest(rj);
+            	}
+            	else if(this.cjob instanceof JobConsume){
+            		JobConsume cj = (JobConsume)this.cjob;
+            		this.consumeItem(cj);
+            	}
+            	else if(this.cjob instanceof JobTake){
+            		JobTake tj = (JobTake) this.cjob;
+            		this.takeItem(tj);
+            	}
+            	else if(this.cjob instanceof JobDrop){
+            		JobDrop tj = (JobDrop) this.cjob;
+            		this.dropItem(tj);
+            	}
+            	else if(this.cjob instanceof JobProduce){
+            		JobProduce pj = (JobProduce) this.cjob;
+            		this.produceItem(pj);
+            	}
+            	//check progress
+            	if(this.checkJobDone(this.cjob)){
+            		this.jobConsequence(this.cjob);
+            		this.cjob.setJobDone(true);
+            	}
         	}
         	
         	/*
         	 * The consequences of a job batch, probably like the salary earned after picking 5 trash on road.
         	 */
-        	if(jobBatchQueue.first().isJobBatchDone()){
+        	if(jobBatchQueue.first().isJobBatchDone()  ||  jobBatchQueue.first().isJobBatchAborted()){
         		this.jobBatchConsequence(jobBatchQueue.first());
         		jobBatchQueue.removeFirst();
         	}
@@ -318,7 +323,6 @@ public class ObjectNPC extends ObjectAbstract{
     	else if(ja instanceof JobTake){
     		JobTake tj = (JobTake) ja;
     		int valid_number = tj.takenItem.getValidNumber(this.determineItemNumber()) ;;
-
         	this.obtainItem(tj.takenItem.getDup(valid_number));
         	tj.takenItem.setStack_number(tj.takenItem.getStack_number()-valid_number);
     	}
@@ -326,7 +330,7 @@ public class ObjectNPC extends ObjectAbstract{
     		JobDrop dj = (JobDrop) ja;
     		int valid_number = dj.droppedItem.getValidNumber(this.determineItemNumber()) ;
     		this.loseItem(dj.droppedItem.getDup(valid_number));
-    		this.game.addItem(dj.droppedItem.getDup(valid_number));
+    		this.game.addItem(dj.droppedItem.getDup(valid_number),this.gPosition);
     	}
     	else if(ja instanceof JobProduce){
     		JobProduce pj = (JobProduce) ja;
@@ -409,7 +413,7 @@ public class ObjectNPC extends ObjectAbstract{
 		return null;	
     }
     public ItemAbstract findItemForNeedOnGround(NeedAbstract na){
-		Queue<ItemAbstract> q = this.inMap.item_ground;
+		Queue<ItemAbstract> q = this.game.getItem_queue();
     	if(na instanceof NeedHunger){		
 			//searching item for hunger need
     		return findItemForNeed(q,NeedAbstract.NEED_HUNGER_ID);
@@ -421,37 +425,6 @@ public class ObjectNPC extends ObjectAbstract{
 		return null;	
 
     }
-
-    public Queue<ItemAbstract> findItemOnGround(ItemAbstract ia){
-    	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
-    	Queue<ItemAbstract> q = this.inMap.item_ground;
-    	int collectNumberInNeed = ia.getStack_number();
-    	/*
-    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
-    	 */
-    	for(int i=0;i<q.size;i++){
-    		if(q.get(i).getId()==ia.getId()){
-    			if(q.get(i).getStack_number()<collectNumberInNeed){
-    				collectNumberInNeed -=q.get(i).getStack_number();
-    				candidates.addFirst(q.get(i));
-    			}
-    			//Targets has more number of items than the NPC needed
-    			else{
-    				collectNumberInNeed=0;
-    				candidates.addFirst(q.get(i).getTaken(collectNumberInNeed));
-    			}
-    				
-    			if(collectNumberInNeed<=0){
-    				return candidates;
-    			}
-    			
-    			
-    		}
-    	}
-    	
-    	
-    	return candidates;
-    }
     private ItemAbstract findItemForNeed(Queue<ItemAbstract> q, int NEED_ID){
     	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
     	/*
@@ -459,6 +432,52 @@ public class ObjectNPC extends ObjectAbstract{
     	 */
     	for(int i=0;i<q.size;i++){
     		if(q.get(i).getDecreasedNeed_id()==NEED_ID){
+    			candidates.addFirst(q.get(i));
+    		}
+    	}
+    	if(candidates.size>0){
+    		return candidates.get(getRandom().nextInt(candidates.size));
+    	}
+    	return null;
+    }
+    public ItemAbstract findItemOnGround(int iid){
+    	Queue<ItemAbstract> q = this.game.getItem_queue();
+    	ItemAbstract ans;
+    	/*
+    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
+    	 */
+    	for(int i=0;i<q.size;i++){
+    		ans = findItem(q,iid);
+    		if(ans!=null){
+    			return ans;
+    		}
+    	}
+    	return null;
+    	
+    }
+    public ItemAbstract findItemOnBody(int iid){
+    	Queue<ItemAbstract> q = this.getItemQueue();
+    	ItemAbstract ans;
+    	/*
+    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
+    	 */
+    	for(int i=0;i<q.size;i++){
+    		ans = findItem(q,iid);
+    		if(ans!=null){
+    			return ans;
+    		}
+    	}
+    	return null;
+    	
+    }
+    private ItemAbstract findItem(Queue<ItemAbstract> q,int iid){
+
+    	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
+    	/*
+    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
+    	 */
+    	for(int i=0;i<q.size;i++){
+    		if(q.get(i).getId()==iid){
     			candidates.addFirst(q.get(i));
     		}
     	}
@@ -674,18 +693,30 @@ public class ObjectNPC extends ObjectAbstract{
 				Stmp+="\n";
 				line+=1;
 			}	
+
+			Stmp+="------------\n";
+			line+=1;
+			
 			for(int i=0;i<this.itemQueue.size;i++){
 				Stmp+=this.itemQueue.get(i).getDisplayName();
 				Stmp+="\n";
 				line+=1;
 			}
+			Stmp+="------------\n";
+			line+=1;
+			
 			for(int i=0;i<this.jobBatchQueue.size;i++){
+				for(int j=0;j<jobBatchQueue.get(i).getBatch().size;j++){
+					Stmp+=(this.jobBatchQueue.get(i).getBatch().get(j).getClass().getSimpleName());
+					
+					Stmp+="\n";
+					line+=1;
+				}
 				
-				Stmp+=(this.jobBatchQueue.get(i).getDisplayName());
-				
-				Stmp+="\n";
-				line+=1;
 			}
+			Stmp+="------------\n";
+			line+=1;
+			
 			Stmp+=Math.round(this.lifeStatus)+"/"+Math.round(this.maxLifeStatus);
 			line+=1;
 			font.draw(batch, Stmp,this.gPosition.x, this.gPosition.y+this.texture.getHeight()*0.5f*line);

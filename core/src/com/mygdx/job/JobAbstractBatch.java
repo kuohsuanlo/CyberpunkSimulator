@@ -24,9 +24,9 @@ public class JobAbstractBatch {
 	public void setBatch(Queue<JobAbstract> batch) {
 		this.job_queue = batch;
 	}
-	public JobAbstract getFirstUndoneJob(){
+	public JobAbstract getFirstDoableJob(){
 		for(int i=0;i<this.job_queue.size;i++){
-			if( !this.job_queue.get(i).isJobDone()){
+			if( !this.job_queue.get(i).isJobDone()  &&  !this.job_queue.get(i).isJobAborted()){
 				return this.job_queue.get(i);
 			}
 		}
