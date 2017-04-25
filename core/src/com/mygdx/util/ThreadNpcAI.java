@@ -194,7 +194,21 @@ public class ThreadNpcAI extends Thread{
 					jb.getBatch().addLast(new JobTake(foundItem.gPosition,-1, -1, null, null,0,0,foundItem,null));
 				}
 				jobBatchQueue.addLast(jb);
+				
+		
+				Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
+				Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
+				ItemAbstract tool = new ItemAbstract(3,oq.npc.gPosition,0,"bucket",1,0,0,0f,0f,null);
+				usedItems.addFirst(ingot);
+				producedItems.addFirst(tool);
+				ItemRecipe recipe_tool = new ItemRecipe(usedItems, producedItems);
 		    	
+				jb.getBatch().addLast(new JobProduce(oq.npc.gPosition, 100, 0, null, null, 0, 0, recipe_tool));
+				ItemAbstract foundItem2 = oq.npc.findItemOnBody(tool.getId());
+	    		if(foundItem2!=null){
+	    			jb.getBatch().addLast(new JobDrop(oq.npc.gPosition, 100, 0, null, null, 0, 0,foundItem2));
+	    		}
+				jobBatchQueue.addLast(jb);	
 			}
 			else if (oq.npc.jobType==1){
 				Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
@@ -219,17 +233,18 @@ public class ThreadNpcAI extends Thread{
 	    		if(foundItem2!=null){
 	    			jb.getBatch().addLast(new JobDrop(oq.npc.gPosition, 100, 0, null, null, 0, 0,foundItem2));
 	    		}
+				jobBatchQueue.addLast(jb);		
+			}
+			else if(oq.npc.jobType ==2){
+				ItemAbstract tool = new ItemAbstract(7,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);			
+	    		JobAbstractBatch jb = new JobAbstractBatch(null);  	
+	    		
+	    		ItemAbstract foundItem = oq.npc.findItemOnGround(tool.getId());
+				if(foundItem!=null){
+					jb.getBatch().addLast(new JobMove(foundItem.gPosition,-1, -1, null, null,0,0));
+					jb.getBatch().addLast(new JobTake(foundItem.gPosition,-1, -1, null, null,0,0,foundItem,null));
+				}
 				jobBatchQueue.addLast(jb);
-		    	
-		    	
-		    	
-		    	
-				/*
-				 * Dummy job for testing collecting item.
-				 * NPC's job makes NPC to collect food. 
-				 * 
-				 * Dummy job : find 5 food items.
-				 */			
 			}
 		}
 		

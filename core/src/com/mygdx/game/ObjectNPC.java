@@ -77,7 +77,7 @@ public class ObjectNPC extends ObjectAbstract{
     	this.currentTimeRC = random.nextFloat()*this.maxTimeRC;
     	this.lastTick = System.currentTimeMillis();
     	this.game = game;
-    	this.jobType = this.id%2;
+    	this.jobType = this.id%3;
     	
     	gPosition.x = random.nextFloat()*Gdx.graphics.getWidth();
     	gPosition.y = random.nextFloat()*Gdx.graphics.getHeight();
