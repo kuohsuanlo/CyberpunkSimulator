@@ -212,64 +212,65 @@ public class ObjectNPC extends ObjectAbstract{
     	}	
     }
     private void doJob(){
-    	//get first job(current)
+
     	if(jobBatchQueue.size==0){
     		return;
     	}
-
     	/*
     	 * Sync jobBatchQueue, because the other thread might pop the other batch, making the last line of 
     	 * code popping the wrong job.
     	 */
+
+		
+		/*
+		 * Do the first not-aborted and undone job. 
+		 */
     	synchronized(jobBatchQueue){
-    		synchronized(jobBatchQueue.first()){
-        		
-        		/*
-        		 * Do the first not-aborted and undone job. 
-        		 */
-    			this.cjob = jobBatchQueue.first().getFirstDoableJob();
-            	
-            	if(cjob!=null){
-            		if(this.cjob instanceof JobMove){
-                		JobMove mj = (JobMove)this.cjob;
-                		this.walkOneTick(mj);
-                	}
-                	else if(this.cjob instanceof JobRest){
-                		JobRest rj = (JobRest)this.cjob;
-                		this.rest(rj);
-                	}
-                	else if(this.cjob instanceof JobConsume){
-                		JobConsume cj = (JobConsume)this.cjob;
-                		this.consumeItem(cj);
-                	}
-                	else if(this.cjob instanceof JobTake){
-                		JobTake tj = (JobTake) this.cjob;
-                		this.takeItem(tj);
-                	}
-                	else if(this.cjob instanceof JobDrop){
-                		JobDrop tj = (JobDrop) this.cjob;
-                		this.dropItem(tj);
-                	}
-                	else if(this.cjob instanceof JobProduce){
-                		JobProduce pj = (JobProduce) this.cjob;
-                		this.produceItem(pj);
-                	}
-                	//check progress
-                	if(this.checkJobDone(this.cjob)){
-                		this.jobConsequence(this.cjob);
-                		this.cjob.setJobDone(true);
-                	}
+    		this.cjob = jobBatchQueue.first().getFirstDoableJob();
+        	
+        	if(cjob!=null){
+        		if(this.cjob instanceof JobMove){
+            		JobMove mj = (JobMove)this.cjob;
+            		this.walkOneTick(mj);
             	}
-            	
-            	/*
-            	 * The consequences of a job batch, probably like the salary earned after picking 5 trash on road.
-            	 */
-            	if(jobBatchQueue.first().isJobBatchDone()  ||  jobBatchQueue.first().isJobBatchAborted()){
-            		this.jobBatchConsequence(jobBatchQueue.first());
-            		jobBatchQueue.removeFirst();
+            	else if(this.cjob instanceof JobRest){
+            		JobRest rj = (JobRest)this.cjob;
+            		this.rest(rj);
             	}
-    		}
+            	else if(this.cjob instanceof JobConsume){
+            		JobConsume cj = (JobConsume)this.cjob;
+            		this.consumeItem(cj);
+            	}
+            	else if(this.cjob instanceof JobTake){
+            		JobTake tj = (JobTake) this.cjob;
+            		this.takeItem(tj);
+            	}
+            	else if(this.cjob instanceof JobDrop){
+            		JobDrop tj = (JobDrop) this.cjob;
+            		this.dropItem(tj);
+            	}
+            	else if(this.cjob instanceof JobProduce){
+            		JobProduce pj = (JobProduce) this.cjob;
+            		this.produceItem(pj);
+            	}
+            	//check progress
+            	if(this.checkJobDone(this.cjob)){
+            		this.jobConsequence(this.cjob);
+            		this.cjob.setJobDone(true);
+            	}
+        	}
+        	
+        	/*
+        	 * The consequences of a job batch, probably like the salary earned after picking 5 trash on road.
+        	 */
+        	if(jobBatchQueue.first().isJobBatchDone()  ||  jobBatchQueue.first().isJobBatchAborted()){
+        		this.jobBatchConsequence(jobBatchQueue.first());
+        		jobBatchQueue.removeFirst();
+        	}
+    	
+    	
     	}
+		
     }
     private void jobBatchConsequence(JobAbstractBatch jb){
     	/*

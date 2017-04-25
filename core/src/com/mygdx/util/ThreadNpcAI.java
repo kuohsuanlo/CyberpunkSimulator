@@ -77,88 +77,92 @@ public class ThreadNpcAI extends Thread{
 		
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
 		Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();
-		for(int i=0;i<needQueue.size;i++){
-    		float c = needQueue.get(i).currentLevel;
-    		float m = needQueue.get(i).maxLevel;
-    		
-    		if(c<m) continue; 
+		synchronized(jobBatchQueue){
+			for(int i=0;i<needQueue.size;i++){
+	    		float c = needQueue.get(i).currentLevel;
+	    		float m = needQueue.get(i).maxLevel;
+	    		
+	    		if(c<m) continue; 
 
-			if( needQueue.get(i) instanceof NeedFatigue) {
-				if (!needQueue.get(i).handledBatchInQueue){
-					JobAbstractBatch jb = new JobAbstractBatch(needQueue.get(i));
-					jb.getBatch().addFirst(new JobRest(oq.npc.gPosition,m,m-c,needQueue.get(i),null,0f,0f));
-					jobBatchQueue.addFirst(jb);
-					needQueue.get(i).handledBatchInQueue = true;
+				if( needQueue.get(i) instanceof NeedFatigue) {
+					if (!needQueue.get(i).handledBatchInQueue){
+						JobAbstractBatch jb = new JobAbstractBatch(needQueue.get(i));
+						jb.getBatch().addFirst(new JobRest(oq.npc.gPosition,m,m-c,needQueue.get(i),null,0f,0f));
+						jobBatchQueue.addFirst(jb);
+						needQueue.get(i).handledBatchInQueue = true;
+					}
 				}
-			}
-			else if( needQueue.get(i) instanceof NeedHunger  ||  needQueue.get(i) instanceof NeedThirst) {
-				//Gdx.app.log("NEED",needQueue.get(i).getClass()+"");
-				//no candidates item in queue, start to search
-				ItemAbstract onBodyItem ;
-				ItemAbstract onGroundItem ;
-				ItemAbstract goal;
-				
-				
-
-				//NPC has no idea where the item is
-				if(needQueue.get(i).neededItemQueue.size==0 ){
-					//find it on NPC body
-					onBodyItem = oq.npc.findItemOnBody(needQueue.get(i));
+				else if( needQueue.get(i) instanceof NeedHunger  ||  needQueue.get(i) instanceof NeedThirst) {
+					//Gdx.app.log("NEED",needQueue.get(i).getClass()+"");
+					//no candidates item in queue, start to search
+					ItemAbstract onBodyItem ;
+					ItemAbstract onGroundItem ;
+					ItemAbstract goal;
 					
-					//found
-					if(onBodyItem!=null){
-						needQueue.get(i).neededItemQueue.addFirst(onBodyItem);
-					}
-					//not found
-					else{
-						//find it on the ground
-						onGroundItem = oq.npc.findItemOnGround(needQueue.get(i));
+					
+
+					//NPC has no idea where the item is
+					if(needQueue.get(i).neededItemQueue.size==0 ){
+						//find it on NPC body
+						onBodyItem = oq.npc.findItemOnBody(needQueue.get(i));
 						
-						//found 
-						if(onGroundItem!=null){
-    	    				if (!needQueue.get(i).handledBatchInQueue){
-    	    					goal = onGroundItem;
-    	    					JobMove jm = new JobMove(goal.gPosition,-1, -1, null, null,0,0);
-    	    					//JobConsume pendingCJ = new JobConsume(goal.gPosition,100,0,needQueue.get(i),null,0f,0f,null);
-    	    					//JobTake jt = new JobTake(goal.gPosition,-1,-1,null,null,0f,0f,goal,pendingCJ);
-
-    	    					JobTake jt = new JobTake(goal.gPosition,-1,-1,null,null,0f,0f,goal,null);
-    	    					//Inverse Order;
-
-    	    					JobAbstractBatch jb = new JobAbstractBatch(needQueue.get(i));
-    	    					//jb.getBatch().addFirst(pendingCJ);
-    	    					jb.getBatch().addFirst(jt);
-    	    					jb.getBatch().addFirst(jm);
-    	    					jobBatchQueue.addFirst(jb);
-    	    					
-    	        				needQueue.get(i).handledBatchInQueue = true;
-    	    				}
+						//found
+						if(onBodyItem!=null){
+							needQueue.get(i).neededItemQueue.addFirst(onBodyItem);
 						}
-						//not found, screw the NPC. Ignore the need.
+						//not found
 						else{
-							//no item to solve the need. Let's rest (ignore) and see.
-							if (!needQueue.get(i).handledBatchInQueue){
-								
-		    				}
+							//find it on the ground
+							onGroundItem = oq.npc.findItemOnGround(needQueue.get(i));
+							
+							//found 
+							if(onGroundItem!=null){
+	    	    				if (!needQueue.get(i).handledBatchInQueue){
+	    	    					goal = onGroundItem;
+	    	    					JobMove jm = new JobMove(goal.gPosition,-1, -1, null, null,0,0);
+	    	    					//JobConsume pendingCJ = new JobConsume(goal.gPosition,100,0,needQueue.get(i),null,0f,0f,null);
+	    	    					//JobTake jt = new JobTake(goal.gPosition,-1,-1,null,null,0f,0f,goal,pendingCJ);
+
+	    	    					JobTake jt = new JobTake(goal.gPosition,-1,-1,null,null,0f,0f,goal,null);
+	    	    					//Inverse Order;
+
+	    	    					JobAbstractBatch jb = new JobAbstractBatch(needQueue.get(i));
+	    	    					//jb.getBatch().addFirst(pendingCJ);
+	    	    					jb.getBatch().addFirst(jt);
+	    	    					jb.getBatch().addFirst(jm);
+	    	    					jobBatchQueue.addFirst(jb);
+	    	    					
+	    	        				needQueue.get(i).handledBatchInQueue = true;
+	    	    				}
+							}
+							//not found, screw the NPC. Ignore the need.
+							else{
+								//no item to solve the need. Let's rest (ignore) and see.
+								if (!needQueue.get(i).handledBatchInQueue){
+									
+			    				}
+							}
 						}
 					}
-				}
-				//NPC know it's on its body
-				else{
-					onBodyItem = needQueue.get(i).neededItemQueue.first();
-    				//just on NPC body
-    				if (!needQueue.get(i).handledBatchInQueue){
-    					goal = needQueue.get(i).neededItemQueue.first();
-    					goal.gPosition = oq.npc.gPosition;
-        				
-        				JobAbstractBatch jb = new JobAbstractBatch(needQueue.get(i));
-    					jb.getBatch().addFirst( new JobConsume(goal.gPosition,100,0,needQueue.get(i),null,0f,0f,goal));
-    					jobBatchQueue.addFirst(jb);
-        				needQueue.get(i).handledBatchInQueue = true;
-    				}
-				}
-    		}
-    	}
+					//NPC know it's on its body
+					else{
+						onBodyItem = needQueue.get(i).neededItemQueue.first();
+	    				//just on NPC body
+	    				if (!needQueue.get(i).handledBatchInQueue){
+	    					goal = needQueue.get(i).neededItemQueue.first();
+	    					goal.gPosition = oq.npc.gPosition;
+	        				
+	        				JobAbstractBatch jb = new JobAbstractBatch(needQueue.get(i));
+	    					jb.getBatch().addFirst( new JobConsume(goal.gPosition,100,0,needQueue.get(i),null,0f,0f,goal));
+	    					jobBatchQueue.addFirst(jb);
+	        				needQueue.get(i).handledBatchInQueue = true;
+	    				}
+					}
+	    		}
+			}
+		}
+		
+    	
 	}
 	private void processUpdatePersonalAbilities(ObjectRequest oq){
 
@@ -169,61 +173,65 @@ public class ThreadNpcAI extends Thread{
 			baseEC_tmp+=(oq.npc.getBpTraits()[i].traits.str+oq.npc.getBpTraits()[i].traits.vit);
 		}
 		oq.npc.setSpeed(speed_tmp*oq.npc.getSpeedBase());
-		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime()*(0.5f));
+		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime()*(3f));
 	}
 	private void processDecideJob(ObjectRequest oq){
 		Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();
 		
-		//int jobType = oq.npc.getRandom().nextInt(2);
-		if(oq.npc.getJobBatchQueue().size>=5) return;
+		synchronized(jobBatchQueue){
+
+			//int jobType = oq.npc.getRandom().nextInt(2);
+			if(oq.npc.getJobBatchQueue().size>=5) return;
+			
+			if(oq.npc.jobType ==0){
+				ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);			
+	    		JobAbstractBatch jb = new JobAbstractBatch(null);  	
+	    		
+	    		ItemAbstract foundItem = oq.npc.findItemOnGround(ingot.getId());
+				if(foundItem!=null){
+					jb.getBatch().addLast(new JobMove(foundItem.gPosition,-1, -1, null, null,0,0));
+					jb.getBatch().addLast(new JobTake(foundItem.gPosition,-1, -1, null, null,0,0,foundItem,null));
+				}
+				jobBatchQueue.addLast(jb);
+		    	
+			}
+			else if (oq.npc.jobType==1){
+				Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
+				Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
+				ItemAbstract bucket = new ItemAbstract(3,oq.npc.gPosition,0,"bucket",1,0,0,0f,0f,null);
+				ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"iron_ingot",1,0,0,0f,0f,null);
+				usedItems.addFirst(bucket);
+				producedItems.addFirst(ingot);
+				ItemRecipe recipe_ingot = new ItemRecipe(usedItems, producedItems);
+	    	
+	    		JobAbstractBatch jb = new JobAbstractBatch(null);
+	    		
+	    		ItemAbstract foundItem1 = oq.npc.findItemOnGround(bucket.getId());
+				if(foundItem1!=null){
+					jb.getBatch().addLast(new JobMove(foundItem1.gPosition,-1, -1, null, null,0,0));
+					jb.getBatch().addLast(new JobTake(foundItem1.gPosition,-1, -1, null, null,0,0,foundItem1,null));
+				}
+	    		
+	    		jb.getBatch().addLast(new JobProduce(oq.npc.gPosition, 100, 0, null, null, 0, 0, recipe_ingot));
+	    		
+	    		ItemAbstract foundItem2 = oq.npc.findItemOnBody(ingot.getId());
+	    		if(foundItem2!=null){
+	    			jb.getBatch().addLast(new JobDrop(oq.npc.gPosition, 100, 0, null, null, 0, 0,foundItem2));
+	    		}
+				jobBatchQueue.addLast(jb);
+		    	
+		    	
+		    	
+		    	
+				/*
+				 * Dummy job for testing collecting item.
+				 * NPC's job makes NPC to collect food. 
+				 * 
+				 * Dummy job : find 5 food items.
+				 */			
+			}
+		}
 		
-		if(oq.npc.jobType ==0){
-			ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);			
-    		JobAbstractBatch jb = new JobAbstractBatch(null);  	
-    		
-    		ItemAbstract foundItem = oq.npc.findItemOnGround(ingot.getId());
-			if(foundItem!=null){
-				jb.getBatch().addLast(new JobMove(foundItem.gPosition,-1, -1, null, null,0,0));
-				jb.getBatch().addLast(new JobTake(foundItem.gPosition,-1, -1, null, null,0,0,foundItem,null));
-			}
-			jobBatchQueue.addLast(jb);
-	    	
-		}
-		else if (oq.npc.jobType==1){
-			Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
-			Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
-			ItemAbstract bucket = new ItemAbstract(3,oq.npc.gPosition,0,"bucket",1,0,0,0f,0f,null);
-			ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"iron_ingot",1,0,0,0f,0f,null);
-			usedItems.addFirst(bucket);
-			producedItems.addFirst(ingot);
-			ItemRecipe recipe_ingot = new ItemRecipe(usedItems, producedItems);
-    	
-    		JobAbstractBatch jb = new JobAbstractBatch(null);
-    		
-    		ItemAbstract foundItem1 = oq.npc.findItemOnGround(bucket.getId());
-			if(foundItem1!=null){
-				jb.getBatch().addLast(new JobMove(foundItem1.gPosition,-1, -1, null, null,0,0));
-				jb.getBatch().addLast(new JobTake(foundItem1.gPosition,-1, -1, null, null,0,0,foundItem1,null));
-			}
-    		
-    		jb.getBatch().addLast(new JobProduce(oq.npc.gPosition, 100, 0, null, null, 0, 0, recipe_ingot));
-    		
-    		ItemAbstract foundItem2 = oq.npc.findItemOnBody(ingot.getId());
-    		if(foundItem2!=null){
-    			jb.getBatch().addLast(new JobDrop(oq.npc.gPosition, 100, 0, null, null, 0, 0,foundItem2));
-    		}
-			jobBatchQueue.addLast(jb);
-	    	
-	    	
-	    	
-	    	
-			/*
-			 * Dummy job for testing collecting item.
-			 * NPC's job makes NPC to collect food. 
-			 * 
-			 * Dummy job : find 5 food items.
-			 */			
-		}
 
 	}
 	public boolean addRequest(ObjectNPC onpc, int type){
