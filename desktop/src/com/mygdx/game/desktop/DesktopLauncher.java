@@ -9,16 +9,16 @@ public class DesktopLauncher {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		
 
-		//config.width = 1440;
-		//config.height = 900;
+		config.width = 1440;
+		config.height = 900;
 		
 	    // TODO: ori2prime (resizing issue)
 	    // TODO: prime2ori (resizing issue)
-		// TODO: progress based on real time passing ==> now 100 progress = 1 sec
+		// TODO: progress based on real time passing ==> now 100 progress == 1 second
 		
 		
-		config.width = 400;
-		config.height = 400;
+		//config.width = 400;
+		//config.height = 400;
 		
 		new LwjglApplication(new MyGdxGame(), config);
 	}

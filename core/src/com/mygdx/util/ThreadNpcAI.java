@@ -166,15 +166,8 @@ public class ThreadNpcAI extends Thread{
     	
 	}
 	private void processUpdatePersonalAbilities(ObjectRequest oq){
-
-		float speed_tmp=0;
-		float baseEC_tmp=0;
-		for(int i=0;i<oq.npc.getBpNumber();i++){
-			speed_tmp+=oq.npc.getBpTraits()[i].traits.dex;
-			baseEC_tmp+=(oq.npc.getBpTraits()[i].traits.str+oq.npc.getBpTraits()[i].traits.vit);
-		}
-		oq.npc.setSpeed(speed_tmp*oq.npc.getSpeedBase());
-		oq.npc.setBaseEnergyConsumption(baseEC_tmp);
+		oq.npc.setSpeed(CharacterUtility.calculateSpeed(oq.npc)*oq.npc.getSpeedBase());
+		oq.npc.setBaseEnergyConsumption(CharacterUtility.calculateBaseEC(oq.npc));
 	}
 	private void processDecideJob(ObjectRequest oq){
 		Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();
@@ -182,7 +175,7 @@ public class ThreadNpcAI extends Thread{
 		synchronized(jobBatchQueue){
 
 			//int jobType = oq.npc.getRandom().nextInt(2);
-			if(oq.npc.getJobBatchQueue().size>=5) return;
+			if(oq.npc.getJobBatchQueue().size>=3) return;
 			
 			if(oq.npc.jobType ==0){
 				ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);			

@@ -11,8 +11,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.job.*;
-import com.mygdx.mission.MissionAbstract;
 import com.mygdx.need.*;
+import com.mygdx.util.CharacterUtility;
 import com.mygdx.util.CoorUtility;
 import com.mygdx.util.ItemUtility;
 import com.mygdx.util.ThreadNpcAI;
@@ -24,6 +24,7 @@ public class ObjectNPC extends ObjectAbstract{
 	 */
 	private float currentTimeRC ;
 	private float maxTimeRC = 1f;
+
 	private float speedBase = 60f;
 	private int expectedLifeInSec = 3600;
 	
@@ -110,7 +111,9 @@ public class ObjectNPC extends ObjectAbstract{
     	//reducing the AI calculating burden
     	
     	this.increaseNeed(tnpc);//1
-    	this.cycleBody(tnpc);//2
+        this.cycleBody(tnpc);//2
+    	
+    	
     	
     	this.tickRC();
     	if(this.needRC()){
@@ -128,6 +131,9 @@ public class ObjectNPC extends ObjectAbstract{
     	//refresh queue, pop-out object such as null item (remove by system, used by others, etc)
     	this.refreshQueue();
     }
+    
+
+    
     private void tickRC(){
     	this.currentTimeRC+=Gdx.graphics.getDeltaTime();
     }
@@ -148,15 +154,8 @@ public class ObjectNPC extends ObjectAbstract{
 		
 	}
 	private void initPersonalAbilities(){
-		//speed formula
-		float speed_tmp=0;
-		float baseEC_tmp=0;
-		for(int i=0;i<getBpNumber();i++){
-			speed_tmp+=this.getBpTraits()[i].traits.dex;
-			baseEC_tmp+=(this.getBpTraits()[i].traits.str+this.getBpTraits()[i].traits.vit);
-		}
-		this.setSpeed(speed_tmp*speedBase);
-    	this.setBaseEnergyConsumption((baseEC_tmp));
+		this.setSpeed(CharacterUtility.calculateSpeed(this)*this.getSpeedBase());
+		this.setBaseEnergyConsumption(CharacterUtility.calculateBaseEC(this));
     	
     	this.maxLifeStatus = getBaseEnergyConsumption()*expectedLifeInSec;
     	this.lifeStatus = getBaseEnergyConsumption()*expectedLifeInSec;
@@ -168,26 +167,7 @@ public class ObjectNPC extends ObjectAbstract{
     	needQueue.addLast( (NeedAbstract)new NeedThirst("thirst",0,0,getNeedMax(NeedAbstract.NEED_THIRST_ID),getNeedMax(NeedAbstract.NEED_THIRST_ID),null,null) );
     }
 	private float getNeedMax(int type){
-		float base_tmp=0;
-		switch(type){
-			case(NeedAbstract.NEED_FATIGUE_ID):
-				for(int i=0;i<getBpNumber();i++){
-					base_tmp+=this.getBpTraits()[i].traits.vit; //0-6
-				}
-				return base_tmp*100f*(0.5f+0.5f*random.nextFloat());
-			case(NeedAbstract.NEED_HUNGER_ID):
-				for(int i=0;i<getBpNumber();i++){
-					base_tmp+=this.getBpTraits()[i].traits.vit; //0-6
-				}
-				return base_tmp*100f*(0.5f+0.5f*random.nextFloat());
-			case(NeedAbstract.NEED_THIRST_ID):
-				for(int i=0;i<getBpNumber();i++){
-					base_tmp+=this.getBpTraits()[i].traits.vit; //0-6
-				}
-				return base_tmp*100f*(0.5f+0.5f*random.nextFloat());
-			default:
-				return 100;
-		}
+		return CharacterUtility.calculateNeedMax(this, type);
 	}
     private void increaseNeed(ThreadNpcAI tnpc){
     	if(tnpc!=null){
@@ -413,43 +393,57 @@ public class ObjectNPC extends ObjectAbstract{
 	 * TODO : random selection, needed to be planted with best choice search
 	 */
     public ItemAbstract findItemOnGround(NeedAbstract na){
-		Queue<ItemAbstract> q = this.game.getItem_queue();
-	 	Queue<ItemAbstract> tmpQ = null;
-	 	tmpQ = ItemUtility.findItemWithNeed(q,na.id);
-    	if(tmpQ!=null  &&  tmpQ.size>0){
-    		return tmpQ.get(random.nextInt(tmpQ.size));
+    	Queue<ItemAbstract> q = this.game.getItem_queue();
+    	Queue<ItemAbstract> tmpQ;
+    	//if(q.size==0) return null;
+    	synchronized(q){
+    	 	tmpQ = ItemUtility.findItemWithNeed(q,na.id);
+        	if(tmpQ!=null  &&  tmpQ.size>0){
+        		return tmpQ.get(random.nextInt(tmpQ.size));
+        	}
+    		return null;
     	}
-		return null;
     }
     public ItemAbstract findItemOnBody(NeedAbstract na){
     	Queue<ItemAbstract> q = this.itemQueue;
-    	Queue<ItemAbstract> tmpQ = null;
-    	tmpQ = ItemUtility.findItemWithNeed(q,na.id);
-    	if(tmpQ!=null  &&  tmpQ.size>0){
-    		return tmpQ.get(random.nextInt(tmpQ.size));
+    	Queue<ItemAbstract> tmpQ;
+    	//if(q.size==0) return null;
+    	synchronized(q){
+    		tmpQ = ItemUtility.findItemWithNeed(q,na.id);
+        	if(tmpQ!=null  &&  tmpQ.size>0){
+        		return tmpQ.get(random.nextInt(tmpQ.size));
+        	}
+    		return null;
     	}
-		return null;	
+    		
     }
     public ItemAbstract findItemOnGround(int iid){
     	Queue<ItemAbstract> q = this.game.getItem_queue();
     	ItemAbstract ans;
-		Queue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid);
-		if(qtmp.size>0){
-			ans = qtmp.get(random.nextInt(qtmp.size));
-			return ans;
-		}
-    	return null;
+    	//if(q.size==0) return null;
+    	synchronized(q){
+    		Queue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid);
+    		if(qtmp.size>0){
+    			ans = qtmp.get(random.nextInt(qtmp.size));
+    			return ans;
+    		}
+        	return null;
+    	}
+    	
     }
     public ItemAbstract findItemOnBody(int iid){
     	Queue<ItemAbstract> q = this.getItemQueue();
     	ItemAbstract ans;
-    	Queue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid);
-		if(qtmp.size>0){
-			ans = qtmp.get(random.nextInt(qtmp.size));
-    		//TODO : random selection, needed to be planted with best choice search
-			return ans;
-		}
-    	return null;
+    	//if(q.size==0) return null;
+    	synchronized(q){
+    		Queue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid);
+    		if(qtmp.size>0){
+    			ans = qtmp.get(random.nextInt(qtmp.size));
+        		//TODO : random selection, needed to be planted with best choice search
+    			return ans;
+    		}
+        	return null;
+    	}
     }
     
 
