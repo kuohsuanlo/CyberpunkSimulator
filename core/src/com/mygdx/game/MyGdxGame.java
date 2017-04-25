@@ -177,11 +177,6 @@ public class MyGdxGame extends ApplicationAdapter {
 			npc_queue.get(i).texture.dispose();
 		}
 	}
-	private void callResource(){
-		if(random.nextDouble()<0.01){
-			this.addRandomItem(this.getRandomLoc(), 1);
-		}
-	}
 	private void callNpc(){
 		for(int i=0;i<npc_queue.size;i++){
 			npc_queue.get(i).doAI();

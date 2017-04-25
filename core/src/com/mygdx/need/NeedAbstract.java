@@ -16,7 +16,7 @@ public abstract class NeedAbstract {
 	public float tickLevel;
 	public float currentLevel;
 	public float maxLevel;
-	
+
 	public boolean handledBatchInQueue;
 	private String displayName;
 	
@@ -86,6 +86,8 @@ public abstract class NeedAbstract {
 		searchRadius= 1000*(currentLevel / maxLevel);;
 
 	}
+	
+
 	public String getDisplayName(){
 		if(this.displayName==null){
 			this.displayName = "not defined";

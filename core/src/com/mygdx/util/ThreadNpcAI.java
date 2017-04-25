@@ -27,12 +27,15 @@ public class ThreadNpcAI extends Thread{
 		this.requestQueueMax = game.getThreadNpcAIQueueMaxNumber();
 		npcr_queue = new Queue<ObjectRequest>();
 	}
+	
+	/*
+	 * getLastTimeElapsed() will return the real time in seconds.
+	 */
 	private void processIncreaseNeed(ObjectRequest oq){
-
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
 		if(oq.npc.getSpecies()==ObjectNPC.HUMAN){
         	for(int i=0;i<needQueue.size;i++){
-        		needQueue.get(i).tickLevel = oq.npc.getBaseEnergyConsumption();
+        		needQueue.get(i).tickLevel = oq.npc.getBaseEnergyConsumption()*oq.npc.getLastTimeElapsed();
         		needQueue.get(i).tickNeed();
         	}
     	}
@@ -40,15 +43,13 @@ public class ThreadNpcAI extends Thread{
 	private void processBodyCycle(ObjectRequest oq){
 
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
-    	boolean allNeedPassed= true;
     	for(int i=0;i<needQueue.size;i++){
     		if(needQueue.get(i).currentLevel>=needQueue.get(i).maxLevel){
-    			oq.npc.damageBody(oq.npc.getBaseEnergyConsumption());
-    			allNeedPassed = false;
+    			oq.npc.damageBody(oq.npc.getBaseEnergyConsumption()*oq.npc.getLastTimeElapsed());
     		}
-    	}
-    	if(allNeedPassed){
-    		oq.npc.recoverBody(oq.npc.getBaseEnergyConsumption()*0.5f);
+    		else{
+    			oq.npc.recoverBody(oq.npc.getBaseEnergyConsumption()*oq.npc.getLastTimeElapsed()*0.5f);
+    		}
     	}
 	}
 	
@@ -173,7 +174,7 @@ public class ThreadNpcAI extends Thread{
 			baseEC_tmp+=(oq.npc.getBpTraits()[i].traits.str+oq.npc.getBpTraits()[i].traits.vit);
 		}
 		oq.npc.setSpeed(speed_tmp*oq.npc.getSpeedBase());
-		oq.npc.setBaseEnergyConsumption(baseEC_tmp*Gdx.graphics.getDeltaTime()*(3f));
+		oq.npc.setBaseEnergyConsumption(baseEC_tmp);
 	}
 	private void processDecideJob(ObjectRequest oq){
 		Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();

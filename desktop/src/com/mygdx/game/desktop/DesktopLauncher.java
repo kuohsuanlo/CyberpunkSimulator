@@ -14,7 +14,7 @@ public class DesktopLauncher {
 		
 	    // TODO: ori2prime (resizing issue)
 	    // TODO: prime2ori (resizing issue)
-		// TODO: progress based on real time passing
+		// TODO: progress based on real time passing ==> now 100 progress = 1 sec
 		
 		
 		config.width = 400;
