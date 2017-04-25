@@ -35,7 +35,7 @@ public class ThreadNpcAI extends Thread{
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
 		if(oq.npc.getSpecies()==ObjectNPC.HUMAN){
         	for(int i=0;i<needQueue.size;i++){
-        		needQueue.get(i).tickLevel = oq.npc.getBaseEnergyConsumption()*oq.npc.getLastTimeElapsed();
+        		needQueue.get(i).tickLevel = oq.npc.getBaseEnergyConsumption()*oq.npc.game.getLastTimeElapsed();
         		needQueue.get(i).tickNeed();
         	}
     	}
@@ -45,10 +45,10 @@ public class ThreadNpcAI extends Thread{
 		Queue<NeedAbstract> needQueue = oq.npc.getNeedQueue();
     	for(int i=0;i<needQueue.size;i++){
     		if(needQueue.get(i).currentLevel>=needQueue.get(i).maxLevel){
-    			oq.npc.damageBody(oq.npc.getBaseEnergyConsumption()*oq.npc.getLastTimeElapsed());
+    			oq.npc.damageBody(oq.npc.getBaseEnergyConsumption()*oq.npc.game.getLastTimeElapsed());
     		}
     		else{
-    			oq.npc.recoverBody(oq.npc.getBaseEnergyConsumption()*oq.npc.getLastTimeElapsed()*0.5f);
+    			oq.npc.recoverBody(oq.npc.getBaseEnergyConsumption()*oq.npc.game.getLastTimeElapsed()*0.5f);
     		}
     	}
 	}

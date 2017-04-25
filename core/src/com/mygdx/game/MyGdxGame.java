@@ -34,7 +34,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 300;
+	public static final int npc_number = 1;
 	public static final int avg_aiq_number = 200;
 	public static final int npc_resource_nubmer = 250;
 	
@@ -55,6 +55,9 @@ public class MyGdxGame extends ApplicationAdapter {
 	private int mouseY;
 	
 	private boolean gamePause;
+	private long lastTick;
+	private float lastTimeElapsed;
+	
 	
 	@Override
 	public void create () {
@@ -77,9 +80,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
 		if(!this.gamePause){
+			this.setLastTick(System.currentTimeMillis());
+			
 			this.callItem();
 			this.callNpc();
-			
 		}
 		
 		this.cam.update();
@@ -122,6 +126,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 	private void initThreadPool(){
 		this.gamePause = false;
+		this.lastTick = System.currentTimeMillis();
+		
 		//this.threadnpc_pool_number = Math.max(2, Runtime.getRuntime().availableProcessors());
 		this.threadnpc_pool_number = Math.max(2, 2);
 		this.threadnpc_pool= new Queue<ThreadNpcAI>();
@@ -254,7 +260,19 @@ public class MyGdxGame extends ApplicationAdapter {
 		return gamePause;
 	}
 	public void setGamePause(boolean gamePause) {
+		if(gamePause==false){
+			this.setLastTick(System.currentTimeMillis());
+		}
 		this.gamePause = gamePause;
+	}
+	public float getLastTimeElapsed() {
+		return this.lastTimeElapsed;
+	}
+	
+	private void setLastTick(long lastTick) {
+		this.lastTimeElapsed =  (lastTick -this.lastTick)*1.0f/1000f;
+		this.lastTick = lastTick;
+		
 	}
 	public Vector2 s2c(Vector2 sc){
 		return new Vector2(sc.x,Gdx.graphics.getHeight()-sc.y);
