@@ -103,7 +103,7 @@ public class ThreadNpcAI extends Thread{
 				//NPC has no idea where the item is
 				if(needQueue.get(i).neededItemQueue.size==0 ){
 					//find it on NPC body
-					onBodyItem = oq.npc.findItemForNeedOnBody(needQueue.get(i));
+					onBodyItem = oq.npc.findItemOnBody(needQueue.get(i));
 					
 					//found
 					if(onBodyItem!=null){
@@ -112,7 +112,7 @@ public class ThreadNpcAI extends Thread{
 					//not found
 					else{
 						//find it on the ground
-						onGroundItem = oq.npc.findItemForNeedOnGround(needQueue.get(i));
+						onGroundItem = oq.npc.findItemOnGround(needQueue.get(i));
 						
 						//found 
 						if(onGroundItem!=null){
@@ -190,8 +190,6 @@ public class ThreadNpcAI extends Thread{
 	    	
 		}
 		else if (oq.npc.jobType==1){
-			
-			
 			Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
 			Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
 			ItemAbstract bucket = new ItemAbstract(3,oq.npc.gPosition,0,"bucket",1,0,0,0f,0f,null);
@@ -200,8 +198,6 @@ public class ThreadNpcAI extends Thread{
 			producedItems.addFirst(ingot);
 			ItemRecipe recipe_ingot = new ItemRecipe(usedItems, producedItems);
     	
-			
-			
     		JobAbstractBatch jb = new JobAbstractBatch(null);
     		
     		ItemAbstract foundItem1 = oq.npc.findItemOnGround(bucket.getId());

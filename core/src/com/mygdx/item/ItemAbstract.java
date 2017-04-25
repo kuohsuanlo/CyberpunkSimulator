@@ -107,6 +107,7 @@ public class ItemAbstract extends ObjectAbstract {
 	}
 	public boolean compareItemAbstract(ItemAbstract ia){
 		return  this.getId()==ia.getId()  && 
+				this.getId()==ia.getId()  && 
 				this.getDecreasedNeed_id() == ia.getDecreasedNeed_id()  &&
 				this.getIncreasedNeed_id() == ia.getIncreasedNeed_id()  &&
 				this.getDecreasedNeed_amount() == ia.getDecreasedNeed_amount()  &&

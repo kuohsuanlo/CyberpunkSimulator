@@ -14,6 +14,7 @@ import com.mygdx.job.*;
 import com.mygdx.mission.MissionAbstract;
 import com.mygdx.need.*;
 import com.mygdx.util.CoorUtility;
+import com.mygdx.util.ItemUtility;
 import com.mygdx.util.ThreadNpcAI;
 
 public class ObjectNPC extends ObjectAbstract{
@@ -400,91 +401,63 @@ public class ObjectNPC extends ObjectAbstract{
     	//return false;
     	return this.lifeStatus<=0;
     }
-    public ItemAbstract findItemForNeedOnBody(NeedAbstract na){
-    	Queue<ItemAbstract> q = this.itemQueue;
-    	if(na instanceof NeedHunger){		
-			//searching item for hunger need
-    		return findItemForNeed(q,NeedAbstract.NEED_HUNGER_ID);
-    	}
-    	else if(na instanceof NeedThirst){		
-			//searching item for hunger need
-    		return findItemForNeed(q,NeedAbstract.NEED_THIRST_ID);
-    	}		
-		return null;	
-    }
-    public ItemAbstract findItemForNeedOnGround(NeedAbstract na){
-		Queue<ItemAbstract> q = this.game.getItem_queue();
-    	if(na instanceof NeedHunger){		
-			//searching item for hunger need
-    		return findItemForNeed(q,NeedAbstract.NEED_HUNGER_ID);
-    	}
-    	else if(na instanceof NeedThirst){		
-			//searching item for hunger need
-    		return findItemForNeed(q,NeedAbstract.NEED_THIRST_ID);
-    	}		
-		return null;	
 
+    
+	/*
+	 * Linear search, need to be more efficient, might could be done by stochastic search. 
+	 * TODO : random selection, needed to be planted with best choice search
+	 */
+    public ItemAbstract findItemOnGround(NeedAbstract na){
+		Queue<ItemAbstract> q = this.game.getItem_queue();
+	 	Queue<ItemAbstract> tmpQ = null;
+	 	tmpQ = ItemUtility.findItemWithNeed(q,na.id);
+    	if(tmpQ!=null  &&  tmpQ.size>0){
+    		return tmpQ.get(random.nextInt(tmpQ.size));
+    	}
+		return null;
     }
-    private ItemAbstract findItemForNeed(Queue<ItemAbstract> q, int NEED_ID){
-    	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
-    	/*
-    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
-    	 */
-    	for(int i=0;i<q.size;i++){
-    		if(q.get(i).getDecreasedNeed_id()==NEED_ID){
-    			candidates.addFirst(q.get(i));
-    		}
+    public ItemAbstract findItemOnBody(NeedAbstract na){
+    	Queue<ItemAbstract> q = this.itemQueue;
+    	Queue<ItemAbstract> tmpQ = null;
+    	tmpQ = ItemUtility.findItemWithNeed(q,na.id);
+    	if(tmpQ!=null  &&  tmpQ.size>0){
+    		return tmpQ.get(random.nextInt(tmpQ.size));
     	}
-    	if(candidates.size>0){
-    		return candidates.get(getRandom().nextInt(candidates.size));
-    	}
-    	return null;
+		return null;	
     }
     public ItemAbstract findItemOnGround(int iid){
     	Queue<ItemAbstract> q = this.game.getItem_queue();
     	ItemAbstract ans;
-    	/*
-    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
-    	 */
-    	for(int i=0;i<q.size;i++){
-    		ans = findItem(q,iid);
-    		if(ans!=null){
-    			return ans;
-    		}
-    	}
+		Queue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid);
+		if(qtmp.size>0){
+			ans = qtmp.get(random.nextInt(qtmp.size));
+			return ans;
+		}
     	return null;
-    	
     }
     public ItemAbstract findItemOnBody(int iid){
     	Queue<ItemAbstract> q = this.getItemQueue();
     	ItemAbstract ans;
-    	/*
-    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
-    	 */
-    	for(int i=0;i<q.size;i++){
-    		ans = findItem(q,iid);
-    		if(ans!=null){
-    			return ans;
-    		}
-    	}
+    	Queue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid);
+		if(qtmp.size>0){
+			ans = qtmp.get(random.nextInt(qtmp.size));
+    		//TODO : random selection, needed to be planted with best choice search
+			return ans;
+		}
     	return null;
-    	
     }
-    private ItemAbstract findItem(Queue<ItemAbstract> q,int iid){
+    
 
-    	Queue<ItemAbstract> candidates = new Queue<ItemAbstract>();
-    	/*
-    	 * Linear search, need to be more efficient, might could be done by stochastic search. 
-    	 */
-    	for(int i=0;i<q.size;i++){
-    		if(q.get(i).getId()==iid){
-    			candidates.addFirst(q.get(i));
+    public boolean hasItem(ItemAbstract ia){
+    	for(int i=0;i<this.itemQueue.size;i++){
+    		if( itemQueue.get(i).compareItemAbstract(ia) ){
+    			if(this.itemQueue.get(i).getStack_number()>=ia.getStack_number()){
+        			return true;
+        		}
     		}
+    		
     	}
-    	if(candidates.size>0){
-    		return candidates.get(getRandom().nextInt(candidates.size));
-    	}
-    	return null;
+    	return false;
     }
     private void obtainItem(ItemAbstract ia1){
     	for(int i=0;i<itemQueue.size;i++){
@@ -512,19 +485,6 @@ public class ObjectNPC extends ObjectAbstract{
     			}
     		}
     	}
-    }
-
-    
-    public boolean hasItem(ItemAbstract ia){
-    	for(int i=0;i<this.itemQueue.size;i++){
-    		if( itemQueue.get(i).compareItemAbstract(ia) ){
-    			if(this.itemQueue.get(i).getStack_number()>=ia.getStack_number()){
-        			return true;
-        		}
-    		}
-    		
-    	}
-    	return false;
     }
     
 
@@ -707,7 +667,7 @@ public class ObjectNPC extends ObjectAbstract{
 			
 			for(int i=0;i<this.jobBatchQueue.size;i++){
 				for(int j=0;j<jobBatchQueue.get(i).getBatch().size;j++){
-					Stmp+=(this.jobBatchQueue.get(i).getBatch().get(j).getClass().getSimpleName());
+					Stmp+=(i+" : "+this.jobBatchQueue.get(i).getBatch().get(j).getClass().getSimpleName());
 					
 					Stmp+="\n";
 					line+=1;
