@@ -109,7 +109,7 @@ public class ThreadNpcAI extends Thread{
 					//NPC has no idea where the item is
 					if(needQueue.get(i).neededItemQueue.size==0 ){
 						//find it on NPC body
-						onBodyItem = oq.npc.findItemOnBody(needQueue.get(i));
+						onBodyItem = oq.npc.findItem(needQueue.get(i),oq.npc.getItemQueue());
 						
 						//found
 						if(onBodyItem!=null){
@@ -118,7 +118,7 @@ public class ThreadNpcAI extends Thread{
 						//not found
 						else{
 							//find it on the ground
-							onGroundItem = oq.npc.findItemOnGround(needQueue.get(i));
+							onGroundItem = oq.npc.findItem(needQueue.get(i),oq.npc.game.getItemQueue());
 							
 							//found 
 							if(onGroundItem!=null){

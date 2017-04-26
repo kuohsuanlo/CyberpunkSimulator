@@ -11,7 +11,7 @@ public class MissionCollect extends MissionAbstract{
 	public void assign(ObjectNPC npc, ItemAbstract ia){
 		JobAbstractBatch jb = new JobAbstractBatch(this);  	
 		
-		ItemAbstract foundItem = npc.findItemOnGround(ia.getId());
+		ItemAbstract foundItem = npc.findItem(ia.getId(),npc.game.getItemQueue());
 		if(foundItem!=null){
 			jb.getBatch().addLast(new JobMove(foundItem.gPosition,-1, -1, null, null,0,0));
 			jb.getBatch().addLast(new JobTake(foundItem.gPosition,-1, -1, null, null,0,0,foundItem,null));

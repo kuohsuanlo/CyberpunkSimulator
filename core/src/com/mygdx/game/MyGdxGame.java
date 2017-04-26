@@ -36,7 +36,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 1;
+	public static final int npc_number = 500;
 	public static final int avg_aiq_number = 400;
 	public static final int npc_resource_nubmer = 1000;
 	
@@ -63,7 +63,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	/*
 	 * 100 = NORMAL SPEED;
 	 */
-	public float realTimeRatio = 100; 
+	private float realTimeRatio = 100; 
 	
 	
 	@Override
@@ -91,7 +91,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
-		if(!this.gamePause){
+		if(!this.gamePause  &&  this.realTimeRatio!=0){
 			this.setLastTick(System.currentTimeMillis());
 			
 			this.callItem();
@@ -110,7 +110,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 		this.drawGameFont();
 		
-		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_queue.size+" / FPS : "+Gdx.graphics.getFramesPerSecond());
+		Gdx.graphics.setTitle("Current AI_NPCs number : "+ npc_queue.size+" / FPS : "+Gdx.graphics.getFramesPerSecond()+" / GAME SPEED : "+this.realTimeRatio/100f);
 		//Gdx.app.log("FPS",Gdx.graphics.getFramesPerSecond()+"");
 		batch.end();
 	}
@@ -278,7 +278,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			return this.threadnpc_pool.get(min_idx);
 		}
 	}
-	public Queue<ItemAbstract> getItem_queue() {
+	public Queue<ItemAbstract> getItemQueue() {
 		return item_queue;
 	}
 	public boolean isGamePause() {
@@ -289,6 +289,15 @@ public class MyGdxGame extends ApplicationAdapter {
 			this.setLastTick(System.currentTimeMillis());
 		}
 		this.gamePause = gamePause;
+	}
+	public void setRealTimeRatio(float rtr){
+		if(this.realTimeRatio==0  &&  rtr!=0){
+			this.setLastTick(System.currentTimeMillis());
+		}
+		this.realTimeRatio = rtr;
+	}
+	public float getRealTimeRatio(){
+		return this.realTimeRatio;
 	}
 	public boolean isFontPrint() {
 		return fontPrint;
@@ -349,25 +358,28 @@ class InGameInputProcessor implements InputProcessor {
 			return true;  
 		}
 		else if (keycode == Input.Keys.UP) {
-			mgg.realTimeRatio+=20;
+			mgg.setRealTimeRatio(mgg.getRealTimeRatio()+20);
 			return true;  
 		}
 		else if (keycode == Input.Keys.DOWN) {
-			if(mgg.realTimeRatio>=20)
-				mgg.realTimeRatio-=20;
+			if(mgg.getRealTimeRatio()>=20)
+				mgg.setRealTimeRatio(mgg.getRealTimeRatio()-20);
 			
 			return true;  
 		}
 
 		else if (keycode == Input.Keys.W) {
-			mgg.realTimeRatio+=1000;
+			mgg.setRealTimeRatio(mgg.getRealTimeRatio()+1000);
 			return true;  
 		}
 		else if (keycode == Input.Keys.S) {
-			if(mgg.realTimeRatio>=1000)
-				mgg.realTimeRatio-=1000;
+			if(mgg.getRealTimeRatio()>=1000)
+				mgg.setRealTimeRatio(mgg.getRealTimeRatio()-1000);
 			
 			return true;  
+		}
+		else if (keycode == Input.Keys.ESCAPE) {
+			Gdx.app.exit();
 		}
 		return false;
 	}

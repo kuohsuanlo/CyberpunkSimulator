@@ -29,7 +29,7 @@ public class ObjectNPC extends ObjectAbstract{
 	 * AI recalculating time
 	 */
 	private float currentTimeRC ;
-	private float maxTimeRC = 1.0f;
+	private float maxTimeRC = 0.5f;
 
 	private float speedBase = 60f;
 	private int expectedLifeInSec = 3600;
@@ -407,61 +407,26 @@ public class ObjectNPC extends ObjectAbstract{
     	return this.lifeStatus<=0;
     }
 
-    
-	/*
-	 * Linear search, need to be more efficient, might could be done by stochastic search. 
-	 * TODO : random selection, needed to be planted with best choice search
-	 */
-    public ItemAbstract findItemOnGround(NeedAbstract na){
-    	Queue<ItemAbstract> q = this.game.getItem_queue();
-    	synchronized(q){
-    		PriorityQueue<ItemAbstract> tmpQ = ItemUtility.findItemWithNeed(q,na.id,this.gPosition);
-        	if(tmpQ!=null  &&  tmpQ.size()>0){
-        		return tmpQ.poll();
-        	}
-    		return null;
-    	}
-    }
-    public ItemAbstract findItemOnBody(NeedAbstract na){
-    	Queue<ItemAbstract> q = this.itemQueue;
-    	synchronized(q){
-    		PriorityQueue<ItemAbstract> tmpQ = ItemUtility.findItemWithNeed(q,na.id,this.gPosition);
-        	if(tmpQ!=null  &&  tmpQ.size()>0){
-        		return tmpQ.poll();
-        	}
-    		return null;
-    	}
-    		
-    }
-    public ItemAbstract findItemOnGround(int iid){
-    	Queue<ItemAbstract> q = this.game.getItem_queue();
-    	ItemAbstract ans;
-    	
-    	synchronized(q){
-    		PriorityQueue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid,this.gPosition);
-    		if(qtmp.size()>0){
-    			ans = qtmp.poll();
-    			return ans;
-    		}
-        	return null;
-    	}
-    	
-    }
-    public ItemAbstract findItemOnBody(int iid){
-    	Queue<ItemAbstract> q = this.getItemQueue();
-    	ItemAbstract ans;
-    	
-    	synchronized(q){
-    		PriorityQueue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid,this.gPosition);
-    		if(qtmp.size()>0){
-    			ans = qtmp.poll();
-    			return ans;
-    		}
-        	return null;
-    	}
-    }
-    
 
+    public ItemAbstract findItem(NeedAbstract na, Queue<ItemAbstract> q){
+    	synchronized(q){
+    		PriorityQueue<ItemAbstract> tmpQ = ItemUtility.findItemWithNeed(q,na.id,this.gPosition);
+        	if(tmpQ!=null  &&  tmpQ.size()>0){
+        		return tmpQ.poll();
+        	}
+    		return null;
+    	}
+    }
+    public ItemAbstract findItem(int iid,Queue<ItemAbstract> q ){
+    	synchronized(q){
+    		PriorityQueue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid,this.gPosition);
+    		if(qtmp.size()>0){
+    			return qtmp.poll();
+    		}
+        	return null;
+    	}
+    }
+    
     public boolean hasItem(ItemAbstract ia){
     	for(int i=0;i<this.itemQueue.size;i++){
     		if( itemQueue.get(i).compareItemAbstract(ia) ){
@@ -507,15 +472,15 @@ public class ObjectNPC extends ObjectAbstract{
     	Vector2 vtmp = new Vector2(mj.getPosition().x - this.gPosition.x, mj.getPosition().y - this.gPosition.y);
     	this.rotation = vtmp.angle();
     	
-    	if(vtmp.len()>this.getSpeed()*this.game.getLastTimeElapsed()*this.game.realTimeRatio){
-        	vtmp.setLength(this.getSpeed()*this.game.getLastTimeElapsed()*this.game.realTimeRatio);
+    	if(vtmp.len()>this.getSpeed()*this.game.getLastTimeElapsed()*this.game.getRealTimeRatio()){
+        	vtmp.setLength(this.getSpeed()*this.game.getLastTimeElapsed()*this.game.getRealTimeRatio());
     	}
     	this.gPosition.add(vtmp);
     }
 
     public void rest(JobRest rj){
-    	rj.setCurrentProgress(rj.getCurrentProgress() + this.game.getLastTimeElapsed()*this.game.realTimeRatio) ;
-    	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed((this.getBaseEnergyConsumption())*this.game.getLastTimeElapsed()*-1f*this.game.realTimeRatio);
+    	rj.setCurrentProgress(rj.getCurrentProgress() + this.game.getLastTimeElapsed()*this.game.getRealTimeRatio()) ;
+    	this.needQueue.get(NeedAbstract.NEED_FATIGUE_ID).addNeed((this.getBaseEnergyConsumption())*this.game.getLastTimeElapsed()*-1f*this.game.getRealTimeRatio());
     }
     public void consumeItem(JobConsume cj){
     	if(cj.consumedItem==null){
@@ -533,12 +498,12 @@ public class ObjectNPC extends ObjectAbstract{
     	
     	ItemAbstract Itmp = cj.consumedItem;
     	if(cj.getDecreasedNeed()!=null){
-    		cj.getDecreasedNeed().addNeed((Itmp.getDecreasedNeed_amount()/cj.getMaxProgress())*this.game.getLastTimeElapsed()*-this.game.realTimeRatio);
+    		cj.getDecreasedNeed().addNeed((Itmp.getDecreasedNeed_amount()/cj.getMaxProgress())*this.game.getLastTimeElapsed()*-this.game.getRealTimeRatio());
     	}
     	if(cj.getIncreasedNeed()!=null){
-    		cj.getIncreasedNeed().addNeed(Itmp.getIncreasedNeed_amount()/cj.getMaxProgress()*this.game.getLastTimeElapsed()*this.game.realTimeRatio);
+    		cj.getIncreasedNeed().addNeed(Itmp.getIncreasedNeed_amount()/cj.getMaxProgress()*this.game.getLastTimeElapsed()*this.game.getRealTimeRatio());
     	}
-    	cj.setCurrentProgress(cj.getCurrentProgress() + this.game.getLastTimeElapsed()*this.game.realTimeRatio);
+    	cj.setCurrentProgress(cj.getCurrentProgress() + this.game.getLastTimeElapsed()*this.game.getRealTimeRatio());
 	
     }
     public void produceItem(JobProduce pj){
@@ -569,7 +534,7 @@ public class ObjectNPC extends ObjectAbstract{
         		return;
     		}
     	}
-    	pj.setCurrentProgress(pj.getCurrentProgress() + this.game.getLastTimeElapsed()*this.game.realTimeRatio);
+    	pj.setCurrentProgress(pj.getCurrentProgress() + this.game.getLastTimeElapsed()*this.game.getRealTimeRatio());
     	
 
     	
@@ -617,7 +582,7 @@ public class ObjectNPC extends ObjectAbstract{
     }
 	public void renderSelf(SpriteBatch batch) {
 		batch.draw(textureRegion, 
-    			this.sPosition.x-this.xOffset, this.gPosition.y-this.yOffset, 
+    			this.sPosition.x-this.xOffset, this.sPosition.y-this.yOffset, 
     			this.texture.getWidth()/2, this.texture.getHeight()/2, 
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 	}
@@ -630,27 +595,28 @@ public class ObjectNPC extends ObjectAbstract{
 		String prog ="";
 		if(ja!=null){
 			prog = Math.round(ja.getCurrentProgress())+"/"+Math.round(ja.getMaxProgress());
+			Vector2 fsPosition = CoorUtility.game2Screen(ja.getPosition());
 			if(ja instanceof JobRest){
-				font.draw(batch, "zzz"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
+				font.draw(batch, "zzz"+prog, fsPosition.x, fsPosition.y+this.texture.getHeight()*0.5f);
 			}
 			else if(ja instanceof JobConsume){
-				font.draw(batch, "csm"+prog, ja.getPosition().x,ja.getPosition().y+this.texture.getHeight()*0.5f);
+				font.draw(batch, "csm"+prog, fsPosition.x,fsPosition.y+this.texture.getHeight()*0.5f);
 			}	
 			else if(ja instanceof JobTake){
-				font.draw(batch, "jbt"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
+				font.draw(batch, "jbt"+prog, fsPosition.x, fsPosition.y+this.texture.getHeight()*0.5f);
 			}
 			else if(ja instanceof JobTake){
-				font.draw(batch, "jbd"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
+				font.draw(batch, "jbd"+prog, fsPosition.x, fsPosition.y+this.texture.getHeight()*0.5f);
 			}
 			else if(ja instanceof JobProduce){
-				font.draw(batch, "prd"+prog, ja.getPosition().x, ja.getPosition().y+this.texture.getHeight()*0.5f);
+				font.draw(batch, "prd"+prog, fsPosition.x, fsPosition.y+this.texture.getHeight()*0.5f);
 			}
 			else if(ja instanceof JobMove){
-				font.draw(batch, this.id+"", ja.getPosition().x, ja.getPosition().y);
+				font.draw(batch, this.id+"", fsPosition.x, fsPosition.y);
 			}
 		}
 		else{
-			font.draw(batch, "---", this.gPosition.x, this.gPosition.y+this.texture.getHeight()*0.5f);
+			font.draw(batch, "---", this.sPosition.x, this.sPosition.y+this.texture.getHeight()*0.5f);
 		}
 		
 
@@ -695,7 +661,7 @@ public class ObjectNPC extends ObjectAbstract{
 			
 			Stmp+=Math.round(this.lifeStatus)+"/"+Math.round(this.maxLifeStatus);
 			line+=1;
-			font.draw(batch, Stmp,this.gPosition.x, this.gPosition.y+this.texture.getHeight()*0.5f*line);
+			font.draw(batch, Stmp,this.sPosition.x, this.sPosition.y+this.texture.getHeight()*0.5f*line);
 
 		}
 		

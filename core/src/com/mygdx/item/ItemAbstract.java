@@ -132,7 +132,7 @@ public class ItemAbstract extends ObjectAbstract {
 	        yOffset = this.texture.getHeight()*0.5f;
 		}
     	batch.draw(new TextureRegion(this.texture), 
-    			this.sPosition.x-this.xOffset, this.gPosition.y-this.yOffset, 
+    			this.sPosition.x-this.xOffset, this.sPosition.y-this.yOffset, 
     			this.texture.getWidth()/2, this.texture.getHeight()/2, 
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 

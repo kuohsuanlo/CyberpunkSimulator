@@ -11,7 +11,7 @@ public class DesktopLauncher {
 
 		config.width = 1440;
 		config.height = 900;
-		
+		//config.fullscreen = true;
 	    // TODO: ori2prime (resizing issue)
 	    // TODO: prime2ori (resizing issue)
 		// ----: progress based on real time passing ==> now 100 progress == 1 second

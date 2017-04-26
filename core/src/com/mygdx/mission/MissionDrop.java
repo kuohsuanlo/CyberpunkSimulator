@@ -12,7 +12,7 @@ public class MissionDrop extends MissionAbstract{
 	public void assign(ObjectNPC npc, ItemAbstract ia, Vector2 location){
 		JobAbstractBatch jb = new JobAbstractBatch(this);  	
 		
-		ItemAbstract foundItem = npc.findItemOnBody(ia.getId());
+		ItemAbstract foundItem = npc.findItem(ia.getId(),npc.getItemQueue());
 		if(foundItem!=null){
 			jb.getBatch().addLast(new JobMove(location, -1, -1, null, null,0,0));
 			jb.getBatch().addLast(new JobDrop(location, 100, 0, null, null, 0, 0,foundItem));
