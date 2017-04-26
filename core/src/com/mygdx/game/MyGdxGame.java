@@ -16,11 +16,13 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.mygdx.character.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.job.JobRest;
 import com.mygdx.need.NeedAbstract;
 import com.mygdx.need.NeedHunger;
 import com.mygdx.need.NeedThirst;
+import com.mygdx.util.CoorUtility;
 import com.mygdx.util.ThreadNpcAI;
 
 
@@ -34,7 +36,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 3;
+	public static final int npc_number = 1;
 	public static final int avg_aiq_number = 400;
 	public static final int npc_resource_nubmer = 1000;
 	
@@ -303,10 +305,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		this.lastTick = lastTick;
 		
 	}
-	public Vector2 s2c(Vector2 sc){
-		return new Vector2(sc.x,Gdx.graphics.getHeight()-sc.y);
 
-	}
 	public int getMouseX() {
 		return mouseX;
 	}
@@ -331,7 +330,7 @@ class InGameInputProcessor implements InputProcessor {
     public boolean touchDown (int x, int y, int pointer, int button) {
     	if (button == Input.Buttons.LEFT) {
     		// Put food (testing)
-    		mgg.addRandomItem(mgg.s2c(new Vector2(x, y)),1);
+    		mgg.addRandomItem(CoorUtility.cursor2Game(new Vector2(x, y)),1);
     		mgg.setMouseX(x);
     		mgg.setMouseY(y);
     		return true;  

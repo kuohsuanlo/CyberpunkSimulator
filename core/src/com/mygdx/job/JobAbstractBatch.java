@@ -1,12 +1,18 @@
 package com.mygdx.job;
 
 import com.badlogic.gdx.utils.Queue;
+import com.mygdx.mission.MissionAbstract;
 import com.mygdx.need.NeedAbstract;
 
 public class JobAbstractBatch {
 	private NeedAbstract drivenNeed;
+	private MissionAbstract drivenMission;
 	
-	
+	public JobAbstractBatch(){
+	}
+	public JobAbstractBatch(MissionAbstract drivenMission){
+		this.drivenMission = drivenMission;
+	}
 	public JobAbstractBatch(NeedAbstract drivenNeed){
 		this.drivenNeed = drivenNeed;
 	}

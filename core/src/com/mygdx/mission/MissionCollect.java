@@ -1,15 +1,15 @@
 package com.mygdx.mission;
 
 import com.badlogic.gdx.utils.Queue;
-import com.mygdx.game.ObjectNPC;
+import com.mygdx.character.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.job.JobAbstractBatch;
 import com.mygdx.job.JobMove;
 import com.mygdx.job.JobTake;
 
 public class MissionCollect extends MissionAbstract{
-	public static void assign(ObjectNPC npc, ItemAbstract ia){
-		JobAbstractBatch jb = new JobAbstractBatch(null);  	
+	public void assign(ObjectNPC npc, ItemAbstract ia){
+		JobAbstractBatch jb = new JobAbstractBatch(this);  	
 		
 		ItemAbstract foundItem = npc.findItemOnGround(ia.getId());
 		if(foundItem!=null){

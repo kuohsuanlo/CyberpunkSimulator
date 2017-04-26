@@ -1,5 +1,6 @@
-package com.mygdx.game;
+package com.mygdx.character;
 
+import java.util.PriorityQueue;
 import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
@@ -9,9 +10,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
+import com.mygdx.game.MyGdxGame;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.job.*;
+import com.mygdx.mission.MissionAbstract;
 import com.mygdx.need.*;
+import com.mygdx.profession.ProfessionAbstract;
+import com.mygdx.profession.ProfessionCollecter;
+import com.mygdx.profession.ProfessionMaker;
 import com.mygdx.util.CharacterUtility;
 import com.mygdx.util.CoorUtility;
 import com.mygdx.util.ItemUtility;
@@ -23,7 +29,7 @@ public class ObjectNPC extends ObjectAbstract{
 	 * AI recalculating time
 	 */
 	private float currentTimeRC ;
-	private float maxTimeRC = 0.5f;
+	private float maxTimeRC = 1.0f;
 
 	private float speedBase = 60f;
 	private int expectedLifeInSec = 3600;
@@ -52,11 +58,13 @@ public class ObjectNPC extends ObjectAbstract{
     /*
      * Queues : to simulate the human behavior by creating the needs and daily jobs, or jobs driven by needs
      */
-	public int jobType;
+	private ProfessionAbstract profession;
 	
     private Queue<ItemAbstract> itemQueue;
     private Queue<NeedAbstract> needQueue;
     private Queue<JobAbstractBatch> jobBatchQueue;
+    private int maxJobBatchQueueNumber = 4;
+    private Queue<MissionAbstract> missionQueue;
     private JobAbstract cjob;
    
     /*
@@ -78,7 +86,7 @@ public class ObjectNPC extends ObjectAbstract{
     	this.currentTimeRC = random.nextFloat()*this.maxTimeRC;
 
     	this.game = game;
-    	this.jobType = this.id%3;
+    	this.profession = this.decideProfession();
     	
     	gPosition.x = random.nextFloat()*Gdx.graphics.getWidth();
     	gPosition.y = random.nextFloat()*Gdx.graphics.getHeight();
@@ -91,6 +99,7 @@ public class ObjectNPC extends ObjectAbstract{
         itemQueue = new Queue<ItemAbstract>();
         jobBatchQueue = new Queue<JobAbstractBatch>();
     	needQueue = new Queue<NeedAbstract>();
+    	missionQueue = new Queue<MissionAbstract>();
     	bpTraits = new ObjectBodyPart[bpNumber];
     	
     	//font = new BitmapFont(); 
@@ -103,7 +112,21 @@ public class ObjectNPC extends ObjectAbstract{
     	initPersonalAbilities();
     	
     }
-    
+    private ProfessionAbstract decideProfession(){
+    	switch(this.id%3){
+	    	case 0:
+	    		return new ProfessionCollecter(this, 0, null,null); 
+	    	case 1:
+	    		return new ProfessionMaker(this, 0, null,null);
+	    	case 2: 
+	    		return new ProfessionMaker(this, 0, null,null); 
+    		default:
+    			return new ProfessionCollecter(this, 0, null,null); 
+    	}
+    }
+    public ProfessionAbstract getProfession(){
+    	return this.profession;
+    }
     public void doAI(){
     	ThreadNpcAI tnpc = this.game.getThreadNpc();
     	
@@ -391,24 +414,20 @@ public class ObjectNPC extends ObjectAbstract{
 	 */
     public ItemAbstract findItemOnGround(NeedAbstract na){
     	Queue<ItemAbstract> q = this.game.getItem_queue();
-    	Queue<ItemAbstract> tmpQ;
-    	//if(q.size==0) return null;
     	synchronized(q){
-    	 	tmpQ = ItemUtility.findItemWithNeed(q,na.id);
-        	if(tmpQ!=null  &&  tmpQ.size>0){
-        		return tmpQ.get(random.nextInt(tmpQ.size));
+    		PriorityQueue<ItemAbstract> tmpQ = ItemUtility.findItemWithNeed(q,na.id,this.gPosition);
+        	if(tmpQ!=null  &&  tmpQ.size()>0){
+        		return tmpQ.poll();
         	}
     		return null;
     	}
     }
     public ItemAbstract findItemOnBody(NeedAbstract na){
     	Queue<ItemAbstract> q = this.itemQueue;
-    	Queue<ItemAbstract> tmpQ;
-    	//if(q.size==0) return null;
     	synchronized(q){
-    		tmpQ = ItemUtility.findItemWithNeed(q,na.id);
-        	if(tmpQ!=null  &&  tmpQ.size>0){
-        		return tmpQ.get(random.nextInt(tmpQ.size));
+    		PriorityQueue<ItemAbstract> tmpQ = ItemUtility.findItemWithNeed(q,na.id,this.gPosition);
+        	if(tmpQ!=null  &&  tmpQ.size()>0){
+        		return tmpQ.poll();
         	}
     		return null;
     	}
@@ -417,13 +436,11 @@ public class ObjectNPC extends ObjectAbstract{
     public ItemAbstract findItemOnGround(int iid){
     	Queue<ItemAbstract> q = this.game.getItem_queue();
     	ItemAbstract ans;
-    	//if(q.size==0) return null;
+    	
     	synchronized(q){
-    		
-    		//  TODO : java.lang.NullPointerException
-    		Queue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid);
-    		if(qtmp.size>0){
-    			ans = qtmp.get(random.nextInt(qtmp.size));
+    		PriorityQueue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid,this.gPosition);
+    		if(qtmp.size()>0){
+    			ans = qtmp.poll();
     			return ans;
     		}
         	return null;
@@ -433,12 +450,11 @@ public class ObjectNPC extends ObjectAbstract{
     public ItemAbstract findItemOnBody(int iid){
     	Queue<ItemAbstract> q = this.getItemQueue();
     	ItemAbstract ans;
-    	//if(q.size==0) return null;
+    	
     	synchronized(q){
-    		Queue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid);
-    		if(qtmp.size>0){
-    			ans = qtmp.get(random.nextInt(qtmp.size));
-        		//TODO : random selection, needed to be planted with best choice search
+    		PriorityQueue<ItemAbstract> qtmp = ItemUtility.findItemWithID(q,iid,this.gPosition);
+    		if(qtmp.size()>0){
+    			ans = qtmp.poll();
     			return ans;
     		}
         	return null;
@@ -718,6 +734,10 @@ public class ObjectNPC extends ObjectAbstract{
     	
 	}
 
+	public boolean isTooBusyToAcceptMission(){
+		return this.jobBatchQueue.size>=this.maxJobBatchQueueNumber;
+	}
+	
 	public int getBpNumber() {
 		return bpNumber;
 	}
@@ -769,7 +789,10 @@ public class ObjectNPC extends ObjectAbstract{
 	public Queue<JobAbstractBatch> getJobBatchQueue(){
 		return this.jobBatchQueue;
 	}
-
+	public Queue<MissionAbstract> getMissionQueue(){
+		return this.missionQueue;
+	}
+	
 	public Queue<ItemAbstract> getItemQueue(){
 		return this.itemQueue;
 	}

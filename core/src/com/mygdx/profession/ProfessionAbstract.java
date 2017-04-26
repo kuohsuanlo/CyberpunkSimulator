@@ -1,9 +1,10 @@
 package com.mygdx.profession;
 
 import com.badlogic.gdx.utils.Queue;
-import com.mygdx.game.ObjectAbstract;
-import com.mygdx.game.ObjectNPC;
+import com.mygdx.character.ObjectAbstract;
+import com.mygdx.character.ObjectNPC;
 import com.mygdx.job.JobAbstract;
+import com.mygdx.mission.MissionAbstract;
 
 public abstract class ProfessionAbstract {
 	/*
@@ -34,29 +35,15 @@ public abstract class ProfessionAbstract {
 	 * Notice that JobAbstract's comparator is specified for profession's related jobs testing, 
 	 * so the comparator is different from ItemAbstract's.
 	 */
-	private Queue<JobAbstract> professionJobQueue;
+	private Queue<MissionAbstract> professionMissionQueue;
 
-	
-	/*
-	 * These functions are possible mission that a NPC might do when possess this profession.
-	 * 
-	 * 
-	 */
-	public abstract void produceItem();
-	public abstract void produceServiceEffect(ObjectAbstract oa);
-	public abstract void produceServiceManagement(ObjectAbstract oa);
-	public abstract void produceServiceFollowing(ObjectAbstract oa);
-
-	public ProfessionAbstract(ObjectNPC owner, float professionPoints,String professionName,  String[] professionLevelTitle , Queue<JobAbstract> professionJobQueue){
+	public ProfessionAbstract(ObjectNPC owner, float professionPoints,String professionName,  String[] professionLevelTitle ){
 		this.owner = owner;
 		this.professionPoints = professionPoints;
 		this.professionName = professionName;
 		this.professionLevelTitle = professionLevelTitle;
-		this.professionJobQueue = professionJobQueue;
 		
-		if(this.professionJobQueue ==null){
-			this.professionJobQueue = new Queue<JobAbstract>();
-		}
+
 		if(this.professionName==null){
 			this.professionName="";
 		}
@@ -68,9 +55,17 @@ public abstract class ProfessionAbstract {
 			this.professionLevelTitle[3] ="Adept";
 			this.professionLevelTitle[4] ="Master";
 		}
+		if(this.professionMissionQueue ==null){
+			this.professionMissionQueue = new Queue<MissionAbstract>();
+		}
 		
-		this.calProfessionLevel();
+		this.updateProfessionLevel();
+		
 	}
+
+	public abstract void checkMissions();
+	
+	
 	public ObjectNPC getOwner(){
 		return this.owner;
 	}
@@ -88,9 +83,9 @@ public abstract class ProfessionAbstract {
 		else if(this.professionPoints<=this.professionLevelThreshold[0]){
 			this.professionPoints=this.professionLevelThreshold[0];
 		}
-		this.calProfessionLevel();
+		this.updateProfessionLevel();
 	}
-	private void calProfessionLevel(){
+	private void updateProfessionLevel(){
 		int currentLevel =0;
 		for(int i=0;i<this.professionLevelThreshold.length;i++){
 			if(this.professionPoints>=this.professionLevelThreshold[i]){

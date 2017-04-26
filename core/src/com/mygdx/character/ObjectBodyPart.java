@@ -1,4 +1,4 @@
-package com.mygdx.game;
+package com.mygdx.character;
 
 public class ObjectBodyPart {
 	public int bodyPosition;

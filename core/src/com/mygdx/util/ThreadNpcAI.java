@@ -3,8 +3,8 @@ package com.mygdx.util;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Queue;
+import com.mygdx.character.ObjectNPC;
 import com.mygdx.game.MyGdxGame;
-import com.mygdx.game.ObjectNPC;
 import com.mygdx.item.ItemAbstract;
 import com.mygdx.item.ItemRecipe;
 import com.mygdx.job.JobAbstract;
@@ -22,6 +22,7 @@ import com.mygdx.need.NeedAbstract;
 import com.mygdx.need.NeedFatigue;
 import com.mygdx.need.NeedHunger;
 import com.mygdx.need.NeedThirst;
+import com.mygdx.profession.ProfessionAbstract;
 
 public class ThreadNpcAI extends Thread{
 	public int requestQueueMax;
@@ -176,49 +177,8 @@ public class ThreadNpcAI extends Thread{
 		Queue<JobAbstractBatch> jobBatchQueue = oq.npc.getJobBatchQueue();
 		
 		synchronized(jobBatchQueue){
-
-			//int jobType = oq.npc.getRandom().nextInt(2);
-			if(oq.npc.getJobBatchQueue().size>=2) return;
-			
-			if(oq.npc.jobType ==0){
-				ItemAbstract ingot_collect = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);
-				ItemAbstract ingot_used = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);		
-				ItemAbstract tool = new ItemAbstract(7,oq.npc.gPosition,0,"tool",1,0,0,0f,0f,null);	
-				
-				Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
-				Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
-				usedItems.addFirst(ingot_used);
-				producedItems.addFirst(tool);
-				ItemRecipe recipe_tool = new ItemRecipe(usedItems, producedItems);
-		    	
-				MissionCollect.assign(oq.npc, ingot_collect);
-				MissionProduce.assign(oq.npc, recipe_tool);
-				MissionDrop.assign(oq.npc, tool, oq.npc.game.getRandomLoc());
-			}
-			else if (oq.npc.jobType==1){
-				ItemAbstract bucket = new ItemAbstract(3,oq.npc.gPosition,0,"bucket",1,0,0,0f,0f,null);	
-				ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"iron_ingot",1,0,0,0f,0f,null);
-				ItemAbstract ingot_dropped = new ItemAbstract(6,oq.npc.gPosition,0,"iron_ingot",1,0,0,0f,0f,null);
-				
-				Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
-				Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
-				
-				ItemRecipe recipe_ingot = new ItemRecipe(usedItems, producedItems);
-				usedItems.addFirst(bucket);
-				producedItems.addFirst(ingot);
-	    	
-				MissionCollect.assign(oq.npc, bucket);
-				MissionProduce.assign(oq.npc, recipe_ingot);
-				MissionDrop.assign(oq.npc,ingot_dropped,oq.npc.game.getRandomLoc());
-			}
-			else if(oq.npc.jobType ==2){
-				ItemAbstract tool = new ItemAbstract(7,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);		
-				
-				MissionCollect.assign(oq.npc, tool);
-			}
+			oq.npc.getProfession().checkMissions();
 		}
-		
-
 	}
 	public boolean addRequest(ObjectNPC onpc, int type){
 		if(this.npcr_queue.size>=requestQueueMax){

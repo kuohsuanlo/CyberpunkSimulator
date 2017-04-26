@@ -6,9 +6,9 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.mygdx.character.ObjectAbstract;
+import com.mygdx.character.ObjectNPC;
 import com.mygdx.game.MyGdxGame;
-import com.mygdx.game.ObjectAbstract;
-import com.mygdx.game.ObjectNPC;
 import com.mygdx.util.CoorUtility;
 
 public class ItemAbstract extends ObjectAbstract {

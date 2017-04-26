@@ -1,6 +1,6 @@
 package com.mygdx.util;
 
-import com.mygdx.game.ObjectNPC;
+import com.mygdx.character.ObjectNPC;
 import com.mygdx.need.NeedAbstract;
 
 public class CharacterUtility {

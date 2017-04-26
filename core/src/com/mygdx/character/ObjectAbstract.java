@@ -1,10 +1,12 @@
-package com.mygdx.game;
+package com.mygdx.character;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.mygdx.game.MyGdxGame;
+import com.mygdx.util.CoorUtility;
 
 
 
@@ -36,7 +38,7 @@ public abstract class ObjectAbstract {
     	/*
     	 * We don't transform here because we might have done it on batch. 
     	 */
-    	this.sPosition = this.gPosition;
+    	this.sPosition = CoorUtility.game2Screen(gPosition);
     }
     
     public abstract String getDisplayName();
