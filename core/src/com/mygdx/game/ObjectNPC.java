@@ -23,7 +23,7 @@ public class ObjectNPC extends ObjectAbstract{
 	 * AI recalculating time
 	 */
 	private float currentTimeRC ;
-	private float maxTimeRC = 1f;
+	private float maxTimeRC = 0.5f;
 
 	private float speedBase = 60f;
 	private int expectedLifeInSec = 3600;
@@ -60,10 +60,11 @@ public class ObjectNPC extends ObjectAbstract{
     private JobAbstract cjob;
    
     /*
-     * Font : for npc to print their own dialog bubbles, current goal, etc.
+     * TextureRegion : buffer for npcs to draw their own texture
      */
-    private BitmapFont font;
-	
+    private TextureRegion textureRegion;
+    
+    
     private Random random;
     
     public MyGdxGame game;
@@ -83,6 +84,7 @@ public class ObjectNPC extends ObjectAbstract{
     	gPosition.y = random.nextFloat()*Gdx.graphics.getHeight();
     	
     	texture = new Texture("npc/"+tid+".png");
+    	textureRegion = new TextureRegion(this.texture);
         xOffset = this.texture.getWidth()*0.5f;
         yOffset = this.texture.getHeight()*0.5f;
     	
@@ -356,7 +358,6 @@ public class ObjectNPC extends ObjectAbstract{
     	}
     	
     	for(int i=0;i<itemQueue.size;i++){
-    		itemQueue.get(i).itemTimePass();
     		if(itemQueue.get(i).itemNeedDestroy()){
     			itemQueue.removeIndex(i);
     		}
@@ -599,12 +600,12 @@ public class ObjectNPC extends ObjectAbstract{
     	return getRandom().nextInt(5)+1;
     }
 	public void renderSelf(SpriteBatch batch) {
-		batch.draw(new TextureRegion(this.texture), 
+		batch.draw(textureRegion, 
     			this.sPosition.x-this.xOffset, this.gPosition.y-this.yOffset, 
     			this.texture.getWidth()/2, this.texture.getHeight()/2, 
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 	}
-	public void renderFont(SpriteBatch batch) {
+	public void renderFont(SpriteBatch batch, BitmapFont font) {
 		if(font==null){
 			font = new BitmapFont(); 
 		}

@@ -15,6 +15,9 @@ import com.mygdx.job.JobMove;
 import com.mygdx.job.JobProduce;
 import com.mygdx.job.JobRest;
 import com.mygdx.job.JobTake;
+import com.mygdx.mission.MissionCollect;
+import com.mygdx.mission.MissionDrop;
+import com.mygdx.mission.MissionProduce;
 import com.mygdx.need.NeedAbstract;
 import com.mygdx.need.NeedFatigue;
 import com.mygdx.need.NeedHunger;
@@ -178,73 +181,40 @@ public class ThreadNpcAI extends Thread{
 			if(oq.npc.getJobBatchQueue().size>=2) return;
 			
 			if(oq.npc.jobType ==0){
-				ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);			
-	    		JobAbstractBatch jb = new JobAbstractBatch(null);  	
-	    		
-	    		ItemAbstract foundItem = oq.npc.findItemOnGround(ingot.getId());
-				if(foundItem!=null){
-					jb.getBatch().addLast(new JobMove(foundItem.gPosition,-1, -1, null, null,0,0));
-					jb.getBatch().addLast(new JobTake(foundItem.gPosition,-1, -1, null, null,0,0,foundItem,null));
-				}
-				jobBatchQueue.addLast(jb);
+				ItemAbstract ingot_collect = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);
+				ItemAbstract ingot_used = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);		
+				ItemAbstract tool = new ItemAbstract(7,oq.npc.gPosition,0,"tool",1,0,0,0f,0f,null);	
 				
-		
-				JobAbstractBatch jb2 = new JobAbstractBatch(null); 
 				Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
 				Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
-				ItemAbstract ingot_used = new ItemAbstract(6,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);		
-				ItemAbstract tool = new ItemAbstract(7,oq.npc.gPosition,0,"tool",1,0,0,0f,0f,null);
 				usedItems.addFirst(ingot_used);
 				producedItems.addFirst(tool);
 				ItemRecipe recipe_tool = new ItemRecipe(usedItems, producedItems);
 		    	
-				jb2.getBatch().addLast(new JobProduce(oq.npc.gPosition, 100, 0, null, null, 0, 0, recipe_tool));
-				ItemAbstract foundItem2 = oq.npc.findItemOnBody(tool.getId());
-	    		if(foundItem2!=null){
-	    			Vector2 loc = oq.npc.game.getRandomLoc();
-	    			jb2.getBatch().addLast(new JobMove(loc, -1, -1, null, null,0,0));
-	    			jb2.getBatch().addLast(new JobDrop(loc, 100, 0, null, null, 0, 0,foundItem2));
-	    		}
-				jobBatchQueue.addLast(jb2);	
+				MissionCollect.assign(oq.npc, ingot_collect);
+				MissionProduce.assign(oq.npc, recipe_tool);
+				MissionDrop.assign(oq.npc, tool, oq.npc.game.getRandomLoc());
 			}
 			else if (oq.npc.jobType==1){
+				ItemAbstract bucket = new ItemAbstract(3,oq.npc.gPosition,0,"bucket",1,0,0,0f,0f,null);	
+				ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"iron_ingot",1,0,0,0f,0f,null);
+				ItemAbstract ingot_dropped = new ItemAbstract(6,oq.npc.gPosition,0,"iron_ingot",1,0,0,0f,0f,null);
+				
 				Queue<ItemAbstract> usedItems = new Queue<ItemAbstract>();
 				Queue<ItemAbstract> producedItems = new Queue<ItemAbstract>();
-				ItemAbstract bucket = new ItemAbstract(3,oq.npc.gPosition,0,"bucket",1,0,0,0f,0f,null);
-				ItemAbstract ingot = new ItemAbstract(6,oq.npc.gPosition,0,"iron_ingot",1,0,0,0f,0f,null);
+				
+				ItemRecipe recipe_ingot = new ItemRecipe(usedItems, producedItems);
 				usedItems.addFirst(bucket);
 				producedItems.addFirst(ingot);
-				ItemRecipe recipe_ingot = new ItemRecipe(usedItems, producedItems);
 	    	
-	    		JobAbstractBatch jb = new JobAbstractBatch(null);
-	    		
-	    		ItemAbstract foundItem1 = oq.npc.findItemOnGround(bucket.getId());
-				if(foundItem1!=null){
-					jb.getBatch().addLast(new JobMove(foundItem1.gPosition,-1, -1, null, null,0,0));
-					jb.getBatch().addLast(new JobTake(foundItem1.gPosition,-1, -1, null, null,0,0,foundItem1,null));
-				}
-	    		
-	    		jb.getBatch().addLast(new JobProduce(oq.npc.gPosition, 100, 0, null, null, 0, 0, recipe_ingot));
-	    		
-	    		ItemAbstract foundItem2 = oq.npc.findItemOnBody(ingot.getId());
-	    		if(foundItem2!=null){
-	    			Vector2 loc = oq.npc.game.getRandomLoc();
-	    			jb.getBatch().addLast(new JobMove(loc,-1, -1, null, null,0,0));
-	    			jb.getBatch().addLast(new JobDrop(loc, 100, 0, null, null, 0, 0,foundItem2));
-	    		}
-				jobBatchQueue.addLast(jb);		
+				MissionCollect.assign(oq.npc, bucket);
+				MissionProduce.assign(oq.npc, recipe_ingot);
+				MissionDrop.assign(oq.npc,ingot_dropped,oq.npc.game.getRandomLoc());
 			}
 			else if(oq.npc.jobType ==2){
-				ItemAbstract tool = new ItemAbstract(7,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);			
-	    		JobAbstractBatch jb = new JobAbstractBatch(null);  	
-	    		
-	    		//TODO: synchronize here <
-	    		ItemAbstract foundItem = oq.npc.findItemOnGround(tool.getId());
-				if(foundItem!=null){
-					jb.getBatch().addLast(new JobMove(foundItem.gPosition,-1, -1, null, null,0,0));
-					jb.getBatch().addLast(new JobTake(foundItem.gPosition,-1, -1, null, null,0,0,foundItem,null));
-				}
-				jobBatchQueue.addLast(jb);
+				ItemAbstract tool = new ItemAbstract(7,oq.npc.gPosition,0,"",1,0,0,0f,0f,null);		
+				
+				MissionCollect.assign(oq.npc, tool);
 			}
 		}
 		

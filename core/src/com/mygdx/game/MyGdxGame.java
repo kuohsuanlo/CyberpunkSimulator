@@ -34,7 +34,7 @@ import com.mygdx.util.ThreadNpcAI;
  * */
 public class MyGdxGame extends ApplicationAdapter {
 
-	public static final int npc_number = 500;
+	public static final int npc_number = 3;
 	public static final int avg_aiq_number = 400;
 	public static final int npc_resource_nubmer = 1000;
 	
@@ -209,7 +209,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 	private void timePassItem(){
 		for(int i=0;i<item_queue.size;i++){
-			item_queue.get(i).itemTimePass();
+			item_queue.get(i).itemTimePass(this.realTimeRatio);
 		}
 	}
 	private void cleanItem(){
@@ -240,13 +240,13 @@ public class MyGdxGame extends ApplicationAdapter {
 	
 	private void drawNpcFont(){
 		for(int i=0;i<npc_queue.size;i++){
-			npc_queue.get(i).renderFont(batch);
+			npc_queue.get(i).renderFont(batch,font);
 		}	
 	}
 	
 	private void drawItemFont(){
 		for(int i=0;i<item_queue.size;i++){
-			item_queue.get(i).renderFont(batch);
+			item_queue.get(i).renderFont(batch,font);
 		}
 	}
 	private void drawGameFont(){

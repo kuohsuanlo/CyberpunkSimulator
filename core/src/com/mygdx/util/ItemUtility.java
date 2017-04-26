@@ -15,11 +15,13 @@ public class ItemUtility {
     	 */
     	synchronized(q){
 	    	for(int i=0;i<q.size;i++){
-	    		synchronized(q.get(i)){
-		    		if(q.get(i)!=null  &&  q.get(i).getDecreasedNeed_id()==NEED_ID){
-		    			candidates.addFirst(q.get(i));
-		    		}
-    			}
+	    		if(q.get(i)!=null){
+		    		synchronized(q.get(i)){
+			    		if(q.get(i)!=null  &&  q.get(i).getDecreasedNeed_id()==NEED_ID){
+			    			candidates.addFirst(q.get(i));
+			    		}
+	    			}
+	    		}
 	    	}
 	    	return candidates;
     	}
@@ -33,10 +35,12 @@ public class ItemUtility {
     	 */
     	synchronized(q){
     		for(int i=0;i<q.size;i++){
-    			synchronized(q.get(i)){
-    				if(q.get(i)!=null  &&  q.get(i).getId()==iid){
-            			candidates.addFirst(q.get(i));
-            		}
+    			if(q.get(i)!=null){
+        			synchronized(q.get(i)){
+        				if(q.get(i)!=null  &&  q.get(i).getId()==iid){
+                			candidates.addFirst(q.get(i));
+                		}
+        			}
     			}
         	}
         	return candidates;

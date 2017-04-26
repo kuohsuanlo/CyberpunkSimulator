@@ -26,8 +26,6 @@ public class ItemAbstract extends ObjectAbstract {
 	private float increasedNeed_amount;
 	
 	private ItemAbstract destroyedItem;
-	
-    private BitmapFont font;
 
 	public ItemAbstract(int id,Vector2 gp, float price, String name,int stack_number, int decreasedNeed_id, int increasedNeed_id,float decreasedNeed_amount, float increasedNeed_amount, ObjectNPC owner, ItemAbstract destroyedItem) {
 		super();
@@ -113,8 +111,8 @@ public class ItemAbstract extends ObjectAbstract {
 				this.getDecreasedNeed_amount() == ia.getDecreasedNeed_amount()  &&
 				this.getIncreasedNeed_amount() == ia.getIncreasedNeed_amount();
 	}
-	public void itemTimePass(){
-		this.rotation=(this.rotation+5)%360;
+	public void itemTimePass(float realTimeRatio){
+		this.rotation=(this.rotation+5*realTimeRatio/100)%360;
 		//ageTick+=1;
 	}
 	public boolean itemNeedDestroy(){
@@ -139,10 +137,7 @@ public class ItemAbstract extends ObjectAbstract {
     			this.texture.getWidth(), this.texture.getHeight(), 1, 1, this.rotation, true);
 
 	}
-	public void renderFont(SpriteBatch batch) {
-		if(font ==null){
-			this.font = new BitmapFont();
-		}
+	public void renderFont(SpriteBatch batch,  BitmapFont font) {
 		if(CoorUtility.isNearCursor(this.sPosition)){
 			font.draw(batch, this.getDisplayName(), this.sPosition.x, this.sPosition.y+2*this.texture.getHeight());
 		}
