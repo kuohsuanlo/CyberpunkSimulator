@@ -1,4 +1,4 @@
-# Cyberpunk Simulator by LogoCat
+# Cyberpunk Simulator by LogoCat - 2017/4/26 停止GitHub上的開放碼源更新 
 
 ![alt tag](http://i.imgur.com/I6kLEVU.png)
 [遊戲設計 Project] 
